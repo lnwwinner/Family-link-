@@ -67,4 +67,20 @@ interface FamilyCareDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGroup(group: FamilyGroup)
+
+    // Watch Health Data
+    @Query("SELECT * FROM watch_health_data ORDER BY timestamp DESC")
+    fun getAllWatchHealthData(): Flow<List<WatchHealthData>>
+
+    @Query("SELECT * FROM watch_health_data ORDER BY timestamp DESC LIMIT 1")
+    fun getLatestWatchHealthData(): Flow<WatchHealthData?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWatchHealthData(data: WatchHealthData)
+
+    @Query("UPDATE watch_health_data SET isSynced = 1")
+    suspend fun markAllWatchHealthDataSynced()
+
+    @Query("DELETE FROM watch_health_data")
+    suspend fun clearWatchHealthData()
 }

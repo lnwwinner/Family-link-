@@ -66,3 +66,21 @@ data class FamilyGroup(
     val groupName: String,
     val ownerId: String
 )
+
+@Entity(tableName = "watch_health_data")
+data class WatchHealthData(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val watchType: String, // "Wear OS", "Samsung Galaxy Watch", "Xiaomi Watch", "Huawei Watch", "Amazfit"
+    val timestamp: Long = System.currentTimeMillis(),
+    val heartRate: Int,
+    val oxygenLevel: Int, // SpO2 %
+    val sleepDurationHours: Double,
+    val sleepQuality: String, // "Deep & Healthy", "Light & Restless", "REM Cycle Peak"
+    val stressLevel: Int, // 1-100
+    val bloodPressureSystolic: Int,
+    val bloodPressureDiastolic: Int,
+    val ecgResult: String, // "Normal Sinus Rhythm", "Inconclusive Beats", "Atrial Fibrillation Detection"
+    val batteryLevel: Int,
+    val connectionStatus: String = "Connected", // "Connected", "Syncing", "Disconnected"
+    val isSynced: Boolean = false
+)

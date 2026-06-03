@@ -93,7 +93,83 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     private val _sensorZ = MutableStateFlow(0f)
     val sensorZ: StateFlow<Float> = _sensorZ.asStateFlow()
 
+    // Smart Watch State Variables
+    val allWatchHealthData: StateFlow<List<WatchHealthData>> = repository.allWatchHealthData
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val latestWatchHealthData: StateFlow<WatchHealthData?> = repository.latestWatchHealthData
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val _selectedWatchBrand = MutableStateFlow("Samsung Galaxy Watch")
+    val selectedWatchBrand: StateFlow<String> = _selectedWatchBrand.asStateFlow()
+
+    private val _isSimulatingWatchData = MutableStateFlow(true)
+    val isSimulatingWatchData: StateFlow<Boolean> = _isSimulatingWatchData.asStateFlow()
+
+    private val _watchBatteryLevel = MutableStateFlow(88)
+    val watchBatteryLevel: StateFlow<Int> = _watchBatteryLevel.asStateFlow()
+
+    private val _isSyncingWatchData = MutableStateFlow(false)
+    val isSyncingWatchData: StateFlow<Boolean> = _isSyncingWatchData.asStateFlow()
+
+    private val _lastWatchSyncTime = MutableStateFlow<Long>(System.currentTimeMillis())
+    val lastWatchSyncTime: StateFlow<Long> = _lastWatchSyncTime.asStateFlow()
+
     init {
+        // Start real-time watch health physiological metrics simulation stream
+        viewModelScope.launch {
+            while (true) {
+                if (_isSimulatingWatchData.value) {
+                    try {
+                        val currentLatest = repository.latestWatchHealthData.first()
+                        val brand = _selectedWatchBrand.value
+                        
+                        // Realistic biological physiological range variation
+                        val baseHr = if (currentLatest != null && currentLatest.watchType == brand) currentLatest.heartRate else (70..80).random()
+                        val hrDelta = (-2..2).random()
+                        val newHr = (baseHr + hrDelta).coerceIn(58, 108)
+
+                        val baseOxygen = if (currentLatest != null && currentLatest.watchType == brand) currentLatest.oxygenLevel else (97..100).random()
+                        val o2Delta = if (Math.random() > 0.8) (-1..1).random() else 0
+                        val newO2 = (baseOxygen + o2Delta).coerceIn(94, 100)
+
+                        val baseStress = if (currentLatest != null && currentLatest.watchType == brand) currentLatest.stressLevel else (25..40).random()
+                        val stressDelta = (-2..2).random()
+                        val newStress = (baseStress + stressDelta).coerceIn(10, 80)
+
+                        val newSystolic = (118..126).random()
+                        val newDiastolic = (76..82).random()
+
+                        val ecgOptions = listOf("Normal Sinus Rhythm", "Sinus Rhythm (Rest)", "Normal Rhythm Trend")
+                        val newEcg = ecgOptions.random()
+
+                        val battery = _watchBatteryLevel.value
+                        val newBattery = if (battery > 5) battery - 1 else 98
+                        _watchBatteryLevel.value = newBattery
+
+                        val simulatedMetric = WatchHealthData(
+                            watchType = brand,
+                            timestamp = System.currentTimeMillis(),
+                            heartRate = newHr,
+                            oxygenLevel = newO2,
+                            sleepDurationHours = currentLatest?.sleepDurationHours ?: 7.2,
+                            sleepQuality = currentLatest?.sleepQuality ?: "Deep & Healthy",
+                            stressLevel = newStress,
+                            bloodPressureSystolic = newSystolic,
+                            bloodPressureDiastolic = newDiastolic,
+                            ecgResult = newEcg,
+                            batteryLevel = newBattery,
+                            connectionStatus = "Connected",
+                            isSynced = false
+                        )
+                        repository.saveWatchHealthData(simulatedMetric)
+                    } catch (e: Exception) {
+                        Log.e("WatchSimulation", "Failed to stream watch metric: ${e.message}")
+                    }
+                }
+                kotlinx.coroutines.delay(4000) // update every 4 seconds for a active lively appearance
+            }
+        }
         // Initialize preset default logs and mock groups for best showcase experience
         viewModelScope.launch {
             repository.initializeDefaultData()
@@ -381,6 +457,100 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
 
     fun dismissNotification() {
         _activeNotification.value = null
+    }
+
+    // Smartwatch specific operations
+    fun selectWatchBrand(brand: String) {
+        _selectedWatchBrand.value = brand
+        viewModelScope.launch {
+            val currentLatest = repository.latestWatchHealthData.first()
+            val newMetric = WatchHealthData(
+                watchType = brand,
+                timestamp = System.currentTimeMillis(),
+                heartRate = (68..75).random(),
+                oxygenLevel = (97..99).random(),
+                sleepDurationHours = when (brand) {
+                    "Wear OS" -> 6.8
+                    "Samsung Galaxy Watch" -> 7.2
+                    "Xiaomi Watch" -> 7.5
+                    "Huawei Watch" -> 7.8
+                    else -> 7.0
+                },
+                sleepQuality = when (brand) {
+                    "Wear OS" -> "Light & Restless"
+                    "Samsung Galaxy Watch" -> "Deep & Healthy"
+                    else -> "REM Cycle Peak"
+                },
+                stressLevel = (20..40).random(),
+                bloodPressureSystolic = (118..124).random(),
+                bloodPressureDiastolic = (76..81).random(),
+                ecgResult = "Normal Sinus Rhythm",
+                batteryLevel = 92,
+                connectionStatus = "Connected",
+                isSynced = false
+            )
+            repository.saveWatchHealthData(newMetric)
+            _activeNotification.value = "Successfully paired & connected with $brand"
+        }
+    }
+
+    fun toggleSimulateWatchData(simulate: Boolean) {
+        _isSimulatingWatchData.value = simulate
+    }
+
+    fun triggerWatchSOS() {
+        viewModelScope.launch {
+            val brand = _selectedWatchBrand.value
+            val hr = repository.latestWatchHealthData.first()?.heartRate ?: 95
+            val bpSys = repository.latestWatchHealthData.first()?.bloodPressureSystolic ?: 124
+            val bpDia = repository.latestWatchHealthData.first()?.bloodPressureDiastolic ?: 80
+            val o2 = repository.latestWatchHealthData.first()?.oxygenLevel ?: 97
+
+            val customSosMessage = "WATCH SOS BUTTON PRESSED on $brand! Elder is calling for urgent response. Live Health: HR: $hr bpm, SpO2: $o2%, BP: $bpSys/$bpDia."
+            triggerEmergencySOS(customSosMessage)
+        }
+    }
+
+    fun triggerWatchFall() {
+        val brand = _selectedWatchBrand.value
+        viewModelScope.launch {
+            // Trigger 30 seconds count-down in app
+            _isFallCountingDown.value = true
+            _fallCountdownSeconds.value = 30
+            playMockNotificationSound()
+
+            fallTimer?.cancel()
+            fallTimer = object : CountDownTimer(30000, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    _fallCountdownSeconds.value = (millisUntilFinished / 1000).toInt()
+                }
+
+                override fun onFinish() {
+                    _isFallCountingDown.value = false
+                    viewModelScope.launch {
+                        val hr = repository.latestWatchHealthData.first()?.heartRate ?: 102
+                        val bpSys = repository.latestWatchHealthData.first()?.bloodPressureSystolic ?: 135
+                        val bpDia = repository.latestWatchHealthData.first()?.bloodPressureDiastolic ?: 88
+                        val o2 = repository.latestWatchHealthData.first()?.oxygenLevel ?: 94
+                        
+                        val msg = "WATCH FALL DETECTED AUTOMATICALLY by critical sensors on $brand! Elder did not respond to countdown. Live Health: HR: $hr bpm, SpO2: $o2%, BP: $bpSys/$bpDia."
+                        triggerEmergencySOS(msg)
+                    }
+                }
+            }.start()
+            
+            _activeNotification.value = "CRITICAL: Watch registered a fall! 30s Countdown started."
+        }
+    }
+
+    fun syncWatchDataWithCloud() {
+        viewModelScope.launch {
+            _isSyncingWatchData.value = true
+            repository.syncWatchData()
+            _isSyncingWatchData.value = false
+            _lastWatchSyncTime.value = System.currentTimeMillis()
+            _activeNotification.value = "Synchronization completed! All smart watch health metrics uploaded safely to Family Link cloud database."
+        }
     }
 
     override fun onCleared() {

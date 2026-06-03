@@ -24,6 +24,8 @@ class FamilyCareRepository(
     val voiceMessages: Flow<List<VoiceMessage>> = dao.getAllVoiceMessages()
     val medications: Flow<List<Medication>> = dao.getAllMedications()
     val medicationLogs: Flow<List<MedicationLog>> = dao.getAllMedicationLogs()
+    val allWatchHealthData: Flow<List<WatchHealthData>> = dao.getAllWatchHealthData()
+    val latestWatchHealthData: Flow<WatchHealthData?> = dao.getLatestWatchHealthData()
 
     // Real stateful local helpers
     private var mediaRecorder: MediaRecorder? = null
@@ -105,6 +107,28 @@ class FamilyCareRepository(
                     intakeTimestamp = System.currentTimeMillis() - 1000 * 60 * 60 * 5, // 5 hours ago
                     isTaken = true,
                     notes = "Taken on time"
+                )
+            )
+        }
+
+        // Seed default watch data for connected watch demo
+        val watchData = dao.getLatestWatchHealthData().first()
+        if (watchData == null) {
+            dao.insertWatchHealthData(
+                WatchHealthData(
+                    watchType = "Samsung Galaxy Watch",
+                    timestamp = System.currentTimeMillis() - 1000 * 60 * 10,
+                    heartRate = 74,
+                    oxygenLevel = 98,
+                    sleepDurationHours = 7.2,
+                    sleepQuality = "Deep & Healthy",
+                    stressLevel = 35,
+                    bloodPressureSystolic = 122,
+                    bloodPressureDiastolic = 81,
+                    ecgResult = "Normal Sinus Rhythm",
+                    batteryLevel = 88,
+                    connectionStatus = "Connected",
+                    isSynced = true
                 )
             )
         }
@@ -241,8 +265,15 @@ class FamilyCareRepository(
     fun playVoiceMessage(filepath: String, onCompletion: () -> Unit = {}) {
         try {
             mediaPlayer?.release()
+            
+            val playingContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.createAttributionContext("microphone")
+            } else {
+                context
+            }
+
             mediaPlayer = MediaPlayer().apply {
-                setDataSource(filepath)
+                setDataSource(playingContext, android.net.Uri.fromFile(java.io.File(filepath)))
                 prepare()
                 start()
                 setOnCompletionListener {
@@ -251,7 +282,7 @@ class FamilyCareRepository(
                     mediaPlayer = null
                 }
             }
-            Log.d("VoicePlayer", "Playing voice message path: $filepath")
+            Log.d("VoicePlayer", "Playing voice message path: $filepath with attributed context")
         } catch (e: Exception) {
             Log.e("VoicePlayer", "Failed to play voice message: ${e.message}")
         }
@@ -280,5 +311,19 @@ class FamilyCareRepository(
             notes = notes
         )
         dao.insertMedicationLog(log)
+    }
+
+    // New Watch Data operations
+    suspend fun saveWatchHealthData(data: WatchHealthData) = withContext(Dispatchers.IO) {
+        dao.insertWatchHealthData(data)
+    }
+
+    suspend fun syncWatchData() = withContext(Dispatchers.IO) {
+        kotlinx.coroutines.delay(1000) // simulated internet sync delays
+        dao.markAllWatchHealthDataSynced()
+    }
+
+    suspend fun clearWatchData() = withContext(Dispatchers.IO) {
+        dao.clearWatchHealthData()
     }
 }

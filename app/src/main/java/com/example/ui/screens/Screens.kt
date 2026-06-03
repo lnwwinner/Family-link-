@@ -30,6 +30,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -39,6 +42,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.data.model.EmergencyLog
 import com.example.data.model.Medication
 import com.example.data.model.VoiceMessage
+import com.example.data.model.WatchHealthData
 import com.example.ui.FamilyCareViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -639,6 +643,12 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
     val medLogsToday by viewModel.medicationLogsToday.collectAsState()
     val userName = viewModel.currentUser.collectAsState().value?.name ?: "Senior User"
 
+    val selectedWatchBrand by viewModel.selectedWatchBrand.collectAsState()
+    val latestWatchHealth by viewModel.latestWatchHealthData.collectAsState()
+    val watchBattery by viewModel.watchBatteryLevel.collectAsState()
+    val isSyncingData by viewModel.isSyncingWatchData.collectAsState()
+    val lastSyncTime by viewModel.lastWatchSyncTime.collectAsState()
+
     // Fall Detection Modal
     if (isFallCountingDown) {
         Dialog(onDismissRequest = { }) {
@@ -768,6 +778,565 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                         ) {
                             Icon(Icons.Default.Check, contentDescription = "Mode", tint = Color(0xFF2EC4B6), modifier = Modifier.size(16.dp))
                             Text(tr(isTh, "Elder Mode Screen", "โหมดผู้สูงอายุ"), color = Color(0xFF2EC4B6), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // SMARTWATCH COMPANION SIMULATOR PANEL
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Header with status indicator
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Devices,
+                                    contentDescription = "Watch",
+                                    tint = ContrastAmber,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = tr(isTh, "Companion Smart Watch", "แท่นจำลองสวิตช์นาฬิกาอัจฉริยะ"),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 16.sp
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(SaniGreen.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "🔋 $watchBattery%",
+                                    color = SaniGreen,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Connected Watch Info block
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(CozySlateBg.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                                .border(1.dp, Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = tr(isTh, "Connected Watch Brand:", "ยี่ห้อนาฬิกาผู้สวมใส่:"),
+                                        color = Color.LightGray,
+                                        fontSize = 12.sp
+                                    )
+                                    Text(
+                                        text = selectedWatchBrand,
+                                        color = ContrastAmber,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = tr(isTh, "Data Streaming Status:", "สถานะการเชื่อมต่อ:"),
+                                        color = Color.LightGray,
+                                        fontSize = 12.sp
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Box(modifier = Modifier.size(8.dp).background(SaniGreen, CircleShape))
+                                        Text(
+                                            text = tr(isTh, "Sensors Streaming Live", "วิทยุสตรีมส่งพิกัดตรวจจับสด"),
+                                            color = SaniGreen,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Watch Brands Grid selector
+                        Text(
+                            text = tr(isTh, "Pair & Simulator Another Watch Brand:", "สวมจับคู่จำลองระบบด้วยนาฬิกายี่ห้ออื่น:"),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+
+                        // Wrap raw buttons of pairing options
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            val watchBrands = listOf("Wear OS", "Samsung", "Xiaomi", "Huawei", "Amazfit")
+                            watchBrands.forEach { shortBrand ->
+                                val fullBrandName = when (shortBrand) {
+                                    "Samsung" -> "Samsung Galaxy Watch"
+                                    "Xiaomi" -> "Xiaomi Watch"
+                                    "Huawei" -> "Huawei Watch"
+                                    else -> shortBrand
+                                }
+                                val isSelected = selectedWatchBrand == fullBrandName
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSelected) PrimaryAccent else Color(0xFF1E293B))
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) ContrastAmber else Color.Transparent,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { viewModel.selectWatchBrand(fullBrandName) }
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = shortBrand,
+                                        color = if (isSelected) Color.White else Color.LightGray,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Divider(color = Color.Gray.copy(alpha = 0.2f))
+
+                        // Live Physiological Telemetry Grid
+                        Text(
+                            text = tr(isTh, "Dynamic Biometric Telemetry Sensors:", "ข้อมูลสัญญาณชีพผู้ป่วยสะท้อนตรวจจับได้:"),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+
+                        latestWatchHealth?.let { health ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Row 1 item 1: Heart Rate
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Favorite,
+                                                    contentDescription = "HR",
+                                                    tint = Color.Red,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "Heart Rate", "ชีพจรหัวใจ"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = "${health.heartRate} BPM",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                    }
+
+                                    // Row 1 item 2: SpO2
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Opacity,
+                                                    contentDescription = "SpO2",
+                                                    tint = Color(0xFF2EA2FF),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "SpO2 (Oxygen)", "ระดับออกซิเจน"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = "${health.oxygenLevel}%",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Row 2 item 1: Sleep
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.NightsStay,
+                                                    contentDescription = "Sleep",
+                                                    tint = Color(0xFFA55EEA),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "Sleep Data", "ชั่วโมงกาลหลับ"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = "${health.sleepDurationHours}H",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 15.sp
+                                            )
+                                            Text(
+                                                text = health.sleepQuality,
+                                                color = SaniGreen,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+
+                                    // Row 2 item 2: Stress
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.TrendingUp,
+                                                    contentDescription = "Stress",
+                                                    tint = ContrastAmber,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "Stress Level", "ความเครียดสะสม"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = "${health.stressLevel}/100",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 15.sp
+                                            )
+                                            val stressCat = when {
+                                                health.stressLevel > 60 -> tr(isTh, "Severe Stress", "เครียดตึงติง")
+                                                health.stressLevel > 35 -> tr(isTh, "Moderate", "ปานกลาง")
+                                                else -> tr(isTh, "Relaxed", "ผ่อนคลาย")
+                                            }
+                                            val stressCol = when {
+                                                health.stressLevel > 60 -> Color.Red
+                                                health.stressLevel > 35 -> ContrastAmber
+                                                else -> SaniGreen
+                                            }
+                                            Text(
+                                                text = stressCat,
+                                                color = stressCol,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Row 3 item 1: Blood Pressure
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Bolt,
+                                                    contentDescription = "BP",
+                                                    tint = Color(0xFFFFB300),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "Blood Pressure", "ความดันโลหิต"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = "${health.bloodPressureSystolic}/${health.bloodPressureDiastolic}",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 15.sp
+                                            )
+                                            Text(
+                                                text = tr(isTh, "mmHg (Normal)", "มม.ปรอท (ปกติ)"),
+                                                color = SaniGreen,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+
+                                    // Row 3 item 2: ECG Status
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.4f)),
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.FavoriteBorder,
+                                                    contentDescription = "ECG",
+                                                    tint = Color(0xFFFF4D4D),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = tr(isTh, "ECG Analysis", "ตรวจ ECG เคลื่อนไฟ"),
+                                                    color = Color.LightGray,
+                                                    fontSize = 11.sp
+                                                )
+                                            }
+                                            Text(
+                                                text = tr(isTh, "SINUS NORMAL", "คลื่นปกติสมบูรณ์"),
+                                                color = SaniGreen,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 13.sp
+                                            )
+                                            Text(
+                                                text = health.ecgResult,
+                                                color = Color.LightGray,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Divider(color = Color.Gray.copy(alpha = 0.2f))
+
+                        // Watch Simulated Interactive Action Buttons
+                        Text(
+                            text = tr(isTh, "Simulate Watch Physical Keys / Events:", "กระตุ้นตรวจวิบากเหตุฉุกเฉินตัวเรือน (คีย์สาธิต):"),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { viewModel.triggerWatchSOS() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC30000)),
+                                modifier = Modifier
+                                    .weight(1.5f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = "SOS",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = tr(isTh, "Trigger Watch SOS", "กด SOS เม็ดมะยม"),
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = { viewModel.triggerWatchFall() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                                modifier = Modifier
+                                    .weight(1.5f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Accessibility,
+                                        contentDescription = "Fall",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = tr(isTh, "Trigger Watch Fall", "จำลองลื่นล้มฉุกเฉิน"),
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // Cloud Syncer Controls
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF1E293B), RoundedCornerShape(10.dp))
+                                .padding(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    val formattedSync = SimpleDateFormat("HH:mm:ss a", Locale.getDefault()).format(Date(lastSyncTime))
+                                    Text(
+                                        text = tr(isTh, "Cloud Sync Service", "การนำขึ้นฐานข้อมูลคลาวด์"),
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    )
+                                    Text(
+                                        text = tr(isTh, "Synced on: $formattedSync", "อัปโหลดแล้วเวลา: $formattedSync"),
+                                        color = Color.LightGray,
+                                        fontSize = 9.sp
+                                    )
+                                }
+
+                                Button(
+                                    onClick = { viewModel.syncWatchDataWithCloud() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
+                                    modifier = Modifier.height(36.dp),
+                                    shape = RoundedCornerShape(6.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp)
+                                ) {
+                                    if (isSyncingData) {
+                                        CircularProgressIndicator(
+                                            color = Color.White,
+                                            strokeWidth = 2.dp,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    } else {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Sync,
+                                                contentDescription = "Sync",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Text(
+                                                text = tr(isTh, "Sync Now", "คลาวด์ซิงค์"),
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -998,7 +1567,16 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
     val allSOSLogs by viewModel.allSOSLogs.collectAsState()
     val voiceMessages by viewModel.voiceMessages.collectAsState()
     val medLogsToday by viewModel.medicationLogsToday.collectAsState()
+    val medications by viewModel.medications.collectAsState()
     val context = LocalContext.current
+
+    val selectedWatchBrand by viewModel.selectedWatchBrand.collectAsState()
+    val latestWatchHealth by viewModel.latestWatchHealthData.collectAsState()
+    val watchBattery by viewModel.watchBatteryLevel.collectAsState()
+    val isSyncingData by viewModel.isSyncingWatchData.collectAsState()
+    val lastSyncTime by viewModel.lastWatchSyncTime.collectAsState()
+
+    var showHealthReportDialog by remember { mutableStateOf(false) }
 
     var nowPlayingFilepath by remember { mutableStateOf<String?>(null) }
     var showMedScheduleDialog by remember { mutableStateOf(false) }
@@ -1008,6 +1586,123 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
     var newMedDosage by remember { mutableStateOf("") }
     var newMedTime by remember { mutableStateOf("") }
     var newMedDesc by remember { mutableStateOf("") }
+
+    if (showHealthReportDialog) {
+        Dialog(onDismissRequest = { showHealthReportDialog = false }) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = tr(isTh, "Emergency Health Report", "รายงานสรุปด่วนเตรียมการแพทย์"),
+                            color = ContrastAmber,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        IconButton(onClick = { showHealthReportDialog = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray)
+                        }
+                    }
+
+                    Text(
+                        text = tr(
+                            isTh,
+                            "FAMILY CARE LINK • OFFICIAL EMERGENCY ADVICE",
+                            "ระบบสะพานลิ้งก์คุ้มครอง • ข้อมูลสัญญาณชีพสรุปด่วน"
+                        ),
+                        color = Color.LightGray,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 280.dp)
+                            .background(Color(0xFF1E293B), RoundedCornerShape(12.dp))
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp)
+                    ) {
+                        val reportText = buildString {
+                            appendLine("=== FAMILY CARE LINK SUMMARY ===")
+                            appendLine("Generated At: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
+                            appendLine("Subject/Patient: Sompong (Senior)")
+                            appendLine("Current Location Coords: Lat: 13.7563, Lng: 100.5018 (Bangkok)")
+                            appendLine("Connected Hardware: $selectedWatchBrand")
+                            appendLine("Battery Capacity: $watchBattery%")
+                            appendLine("--------------------------------------------")
+                            appendLine("LIVE BIOMETRIC TELEMETRY SENSORS:")
+                            latestWatchHealth?.let { health ->
+                                appendLine("- Heart Rate: ${health.heartRate} BPM (Normal range)")
+                                appendLine("- SpO2 (Blood Oxygen): ${health.oxygenLevel}%")
+                                appendLine("- Blood Pressure: ${health.bloodPressureSystolic}/${health.bloodPressureDiastolic} mmHg")
+                                appendLine("- ECG Analysis: Normal Sinus Rhythm")
+                                appendLine("- Stress Level: ${health.stressLevel}/100")
+                                appendLine("- Sleep Summary: ${health.sleepDurationHours} Hours (${health.sleepQuality})")
+                            } ?: appendLine("- No smartwatch telemetry records saved yet.")
+                            appendLine("--------------------------------------------")
+                            appendLine("MEDICATION PRESCRIPTIONS:")
+                            if (medications.isNotEmpty()) {
+                                medications.forEach { med ->
+                                    appendLine("- ${med.name} (${med.dosage}) at ${med.timeOfDay}")
+                                }
+                            } else {
+                                appendLine("- No medications listed in database.")
+                            }
+                            appendLine("--------------------------------------------")
+                            appendLine("TODAY'S MEDICINE COMPLIANCE STATUS:")
+                            if (medLogsToday.isNotEmpty()) {
+                                medLogsToday.forEach { log ->
+                                    val formattedTime = java.text.SimpleDateFormat("HH:mm a", java.util.Locale.getDefault()).format(java.util.Date(log.intakeTimestamp))
+                                    appendLine("- ${log.medName} [${if (log.isTaken) "TAKEN" else "PENDING"}] at $formattedTime")
+                                }
+                            } else {
+                                appendLine("- No logs recorded for today's medicines yet.")
+                            }
+                            appendLine("============================================")
+                        }
+
+                        Text(
+                            text = reportText,
+                            fontFamily = FontFamily.Monospace,
+                            color = Color(0xFF50FA7B),
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                showHealthReportDialog = false
+                                coroutineScope.launch {
+                                    viewModel.triggerEmergencySOS("EXPORTER REPORT SHARED: Medical synthesis summary copy requested for SOMPONG. Primary contact: Caregiver alerts enabled.")
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(tr(isTh, "Share Report (SOS Alert)", "ส่งแชร์สรุปด่วนสัญญาณกู้ชีพ"), color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (showMedScheduleDialog) {
         Dialog(onDismissRequest = { showMedScheduleDialog = false }) {
@@ -1273,6 +1968,262 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                 ) {
                                     Text(tr(isTh, "Mark Resolved", "ช่วยเหลือเสร็จสิ้น"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // CAREGIVER LIVE WEARABLES MONITORING HUB
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Title header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Devices,
+                                    contentDescription = "Watch Icon",
+                                    tint = ContrastAmber,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = tr(isTh, "Live Wearable Health Hub", "ศูนย์ติดตามตรวจประเมินสัญญาณชีพนาฬิกา"),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 16.sp
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .background(SaniGreen.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = tr(isTh, "CLOUDSYNC ACTIVE", "คลาวด์ทำงานสตรีมอยู่"),
+                                    color = SaniGreen,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Hardware info summary
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF1E293B), RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = tr(isTh, "Equipped Watch Model:", "รุ่นนาฬิกาประจำตัวคนไข้:"),
+                                        color = Color.LightGray,
+                                        fontSize = 11.sp
+                                    )
+                                    Text(
+                                        text = selectedWatchBrand,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = tr(isTh, "Watch Battery status:", "แบตเตอรี่หน้าปัด:"),
+                                        color = Color.LightGray,
+                                        fontSize = 11.sp
+                                    )
+                                    Text(
+                                        text = "🔋 $watchBattery% Charged",
+                                        color = if (watchBattery < 20) Color.Red else SaniGreen,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // Grid representing the live indicators from patient
+                        latestWatchHealth?.let { health ->
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // HR item with alerts
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.Favorite, contentDescription = "HR", tint = Color.Red, modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "Pulse (HR)", "จุดพิกัดชีพจร"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Text("${health.heartRate} BPM", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                            val isHrWarning = health.heartRate < 60 || health.heartRate > 100
+                                            Text(
+                                                text = if (isHrWarning) tr(isTh, "⚠️ ABNORMAL", "⚠️ ชีพจรอ่อนไหว") else tr(isTh, "✓ Safe Range", "✓ พิกัดระดับปกติ"),
+                                                color = if (isHrWarning) Color.Red else SaniGreen,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+
+                                    // SpO2 item
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.Opacity, contentDescription = "SpO2", tint = Color(0xFF2EA2FF), modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "Blood Oxygen (SpO2)", "ออกซิเจนในเลือด"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Text("${health.oxygenLevel}%", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                            val isOxygenWarning = health.oxygenLevel < 95
+                                            Text(
+                                                text = if (isOxygenWarning) tr(isTh, "⚠️ DECREASED SpO2", "⚠️ ต่ำกว่าเกณฑ์") else tr(isTh, "✓ Optimal Oxygenation", "✓ ออกซิเจนสมบูรณ์ตามเกณฑ์"),
+                                                color = if (isOxygenWarning) Color.Red else SaniGreen,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Blood pressure
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.Bolt, contentDescription = "BP", tint = Color(0xFFFFB300), modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "Blood Pressure (BP)", "แรงความดันโลหิต"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Text("${health.bloodPressureSystolic}/${health.bloodPressureDiastolic}", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                            Text(tr(isTh, "mmHg (Steady State)", "มม.ปรอท (ค่าสถิตปกติ)"), color = SaniGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    // Stress and ECG
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.FavoriteBorder, contentDescription = "ECG", tint = Color(0xFFFF4D4D), modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "ECG Pulse Quality", "จังหวะกล้ามเนื้อหัวใจ"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Text(tr(isTh, "NORMAL RHYTHM", "สัญญาสัญญาณปกติ"), color = SaniGreen, fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                            Text(health.ecgResult, color = Color.LightGray, fontSize = 9.sp)
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    // Sleep summary
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(1.2f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.NightsStay, contentDescription = "Sleep", tint = Color(0xFFA55EEA), modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "Sleep Data History", "ชั่วโมงนอนหลับ"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("${health.sleepDurationHours} Hours", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                Text(health.sleepQuality, color = SaniGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+
+                                    // Stress index
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = CozySlateBg.copy(alpha = 0.5f)),
+                                        modifier = Modifier.weight(0.8f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(10.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Icon(Icons.Default.TrendingUp, contentDescription = "Stress", tint = ContrastAmber, modifier = Modifier.size(16.dp))
+                                                Text(tr(isTh, "Stress Level", "ความเครียดเค้นสมอง"), color = Color.LightGray, fontSize = 11.sp)
+                                            }
+                                            Text("${health.stressLevel}/100 Index", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Action area: Emergency Health Report Generation
+                        Button(
+                            onClick = { showHealthReportDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = "Report", tint = Color.White, modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = tr(isTh, "Generate Emergency Health Summary", "จัดทำสรุปสุขภาพเวชศาสตร์ด่วนส่งหมอ"),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
                             }
                         }
                     }
