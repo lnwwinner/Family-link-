@@ -15,9 +15,12 @@ import com.example.data.model.*
         Medication::class,
         MedicationLog::class,
         FamilyGroup::class,
-        WatchHealthData::class
+        WatchHealthData::class,
+        HospitalAppointment::class,
+        MedicalDocument::class,
+        EmergencyProfile::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

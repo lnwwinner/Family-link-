@@ -84,3 +84,52 @@ data class WatchHealthData(
     val connectionStatus: String = "Connected", // "Connected", "Syncing", "Disconnected"
     val isSynced: Boolean = false
 )
+
+@Entity(tableName = "hospital_appointments")
+data class HospitalAppointment(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val patientName: String = "Sompong Somdee",
+    val hospitalName: String,
+    val doctorName: String,
+    val department: String,
+    val appointmentTimestamp: Long, // Epoch millis
+    val reminderMinutesBefore: Int = 60,
+    val isReminderSet: Boolean = true,
+    val notes: String = "",
+    val qrCodeData: String? = null,
+    val documentPath: String? = null,
+    val ocrExtractedText: String? = null,
+    val isFamilyShared: Boolean = true,
+    val isSynced: Boolean = false,
+    val treatmentSuggested: String = "",
+    val diagnosis: String = ""
+)
+
+@Entity(tableName = "medical_documents")
+data class MedicalDocument(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val appointmentId: Int? = null,
+    val title: String,
+    val documentType: String, // "Lab Report", "Prescription", "X-Ray Diagnosis", "Appointment Slip", "Other"
+    val filePath: String = "",
+    val timestamp: Long = System.currentTimeMillis(),
+    val extractedDetails: String? = null,
+    val isSynced: Boolean = false,
+    val fileSizeKb: Int = 345
+)
+
+@Entity(tableName = "emergency_profiles")
+data class EmergencyProfile(
+    @PrimaryKey val id: Int = 1,
+    val patientName: String = "Sompong Somdee",
+    val bloodType: String = "O+",
+    val allergies: String = "Sulfide Antibiotics, Penicillin",
+    val chronicConditions: String = "Hypertension, Stage-2 Diabetes, Arrhythmia",
+    val regularPrescriptions: String = "Aspirin 81mg (Daily), Metformin 500mg, Atorvastatin 20mg",
+    val emergencyContactName: String = "Suda Somdee",
+    val emergencyContactPhone: String = "081-234-5678",
+    val hospitalPreference: String = "Bangkok General Hospital",
+    val insuranceDetails: String = "AIA Health Lifetime - Policy #912-88X-CC",
+    val additionalNotes: String = "Always check heartbeat levels before administering standard anesthesia."
+)
+

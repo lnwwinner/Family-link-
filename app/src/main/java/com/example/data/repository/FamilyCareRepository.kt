@@ -26,6 +26,9 @@ class FamilyCareRepository(
     val medicationLogs: Flow<List<MedicationLog>> = dao.getAllMedicationLogs()
     val allWatchHealthData: Flow<List<WatchHealthData>> = dao.getAllWatchHealthData()
     val latestWatchHealthData: Flow<WatchHealthData?> = dao.getLatestWatchHealthData()
+    val allAppointments: Flow<List<HospitalAppointment>> = dao.getAllAppointments()
+    val allMedicalDocuments: Flow<List<MedicalDocument>> = dao.getAllMedicalDocuments()
+    val emergencyProfile: Flow<EmergencyProfile?> = dao.getEmergencyProfile()
 
     // Real stateful local helpers
     private var mediaRecorder: MediaRecorder? = null
@@ -129,6 +132,128 @@ class FamilyCareRepository(
                     batteryLevel = 88,
                     connectionStatus = "Connected",
                     isSynced = true
+                )
+            )
+        }
+
+        // Seed default emergency profile if none exists
+        val currentProfile = dao.getEmergencyProfile().first()
+        if (currentProfile == null) {
+            dao.insertEmergencyProfile(
+                EmergencyProfile(
+                    id = 1,
+                    patientName = "Sompong Somdee",
+                    bloodType = "O+",
+                    allergies = "Sulfide Antibiotics, Penicillin, Seafood",
+                    chronicConditions = "Hypertension, Stage-2 Diabetes, Arrhythmia, Gout",
+                    regularPrescriptions = "Aspirin 81mg (Daily), Metformin 500mg (Lunch), Atorvastatin 20mg (Bedtime)",
+                    emergencyContactName = "Suda Somdee (Daughter)",
+                    emergencyContactPhone = "081-234-5678",
+                    hospitalPreference = "Bangkok General Hospital",
+                    insuranceDetails = "AIA Health Lifetime Cover - Policy #912-88X-CC-26",
+                    additionalNotes = "Always verify oxygen saturation and heart rhythm before administering general anesthesia. Carry emergency asthma inhaler in pocket."
+                )
+            )
+        }
+
+        // Seed default hospital appointments
+        val currentAppointments = dao.getAllAppointments().first()
+        if (currentAppointments.isEmpty()) {
+            val now = System.currentTimeMillis()
+            val dayMillis = 24 * 60 * 60 * 1000L
+
+            // 1. Past Appt (2 days ago)
+            val pastId = dao.insertAppointment(
+                HospitalAppointment(
+                    patientName = "Sompong Somdee",
+                    hospitalName = "Bangkok General Hospital",
+                    doctorName = "Dr. Anon (Cardiology)",
+                    department = "Heart Center / ศูนย์โรคหัวใจ",
+                    appointmentTimestamp = now - 2 * dayMillis,
+                    reminderMinutesBefore = 60,
+                    isReminderSet = false,
+                    notes = "Finished regular ECG check. Heart rhythm looks stable but doctor advised to continue Atorvastatin daily.",
+                    qrCodeData = "HOSP_AP_SOMPONG_2026_06_01",
+                    documentPath = "Simulated Blood Report Document",
+                    ocrExtractedText = "PATIENT: SOMPONG SOMDEE\nHOSPITAL: BANGKOK GENERAL\nDEPT: CARDIOLOGY\nDATE: JUN 01, 2026\nCHOL: 185 mg/dL (Normal < 200)\nECG: STABLE SINUS RHYTHM_RECOMMENDED_FOLLOW_UP",
+                    isFamilyShared = true,
+                    isSynced = true,
+                    treatmentSuggested = "Continue low-sodium diet and daily walking.",
+                    diagnosis = "Ischemic Heart Disease (Follow-up)"
+                )
+            )
+
+            // 2. Upcoming Appt (in 3 days)
+            dao.insertAppointment(
+                HospitalAppointment(
+                    patientName = "Sompong Somdee",
+                    hospitalName = "Bangkok General Hospital",
+                    doctorName = "Dr. Somchai (Orthopedics)",
+                    department = "Spine & Joint Center / ศูนย์ศัลยกรรมกระดูก",
+                    appointmentTimestamp = now + 3 * dayMillis,
+                    reminderMinutesBefore = 1440, // 1 day before
+                    isReminderSet = true,
+                    notes = "Post-operative knee recovery session and joint flexibility screening.",
+                    qrCodeData = "HOSP_AP_SOMPONG_2026_06_06",
+                    isFamilyShared = true,
+                    isSynced = false,
+                    treatmentSuggested = "Perform mild knee exercises daily. Avoid climbing steep steps.",
+                    diagnosis = "Osteoarthritis Knee (Post-op Monitoring)"
+                )
+            )
+
+            // 3. Upcoming Appt (in 14 days)
+            dao.insertAppointment(
+                HospitalAppointment(
+                    patientName = "Sompong Somdee",
+                    hospitalName = "Vajira Hospital",
+                    doctorName = "Dr. Somsri (Endocrinology)",
+                    department = "Diabetes Clinic / คลินิกเบาหวาน",
+                    appointmentTimestamp = now + 14 * dayMillis,
+                    reminderMinutesBefore = 120,
+                    isReminderSet = true,
+                    notes = "Routine fasting blood sugar level check. Fasting is required for 8 hours before appointment.",
+                    qrCodeData = "HOSP_AP_SOMPONG_2026_06_17",
+                    isFamilyShared = true,
+                    isSynced = true
+                )
+            )
+
+            // Seed default medical documents linked to past appointments or general
+            dao.insertMedicalDocument(
+                MedicalDocument(
+                    appointmentId = pastId.toInt(),
+                    title = "Blood Biomarker Panel Report - 2026",
+                    documentType = "Lab Report",
+                    filePath = "Simulated Blood Work file.pdf",
+                    timestamp = now - 2 * dayMillis,
+                    extractedDetails = "Fasting Blood Glucose: 110 mg/dL (Slightly high), HbA1c: 6.4% (Pre-diabetic), LDL: 85 mg/dL (Good), Potassium: 4.1 mEq/L (Normal)",
+                    isSynced = true,
+                    fileSizeKb = 850
+                )
+            )
+            dao.insertMedicalDocument(
+                MedicalDocument(
+                    appointmentId = pastId.toInt(),
+                    title = "Cardiac ECG Graph Synthesis",
+                    documentType = "X-Ray Diagnosis",
+                    filePath = "Simulated Electrocardiogram scan.png",
+                    timestamp = now - 2 * dayMillis - 100 * 60 * 60 * 1000L, // several days ago
+                    extractedDetails = "ECG rhythm strip reveals Normal Sinus Rhythm at 72 bpm. PR interval: 160ms, QRS duration: 90ms. No ST-segment elevation detected.",
+                    isSynced = true,
+                    fileSizeKb = 1200
+                )
+            )
+            dao.insertMedicalDocument(
+                MedicalDocument(
+                    appointmentId = null,
+                    title = "AIA Health Lifetime Insurance Cover",
+                    documentType = "Other",
+                    filePath = "Simulated Insurance Policy.pdf",
+                    timestamp = now - 50 * dayMillis,
+                    extractedDetails = "Policy Number: 912-88X-CC-26. Coverage: Elderly Intensive Inpatient Care, up to 1,500,000 THB per year. Active Status.",
+                    isSynced = true,
+                    fileSizeKb = 2450
                 )
             )
         }
@@ -325,5 +450,32 @@ class FamilyCareRepository(
 
     suspend fun clearWatchData() = withContext(Dispatchers.IO) {
         dao.clearWatchHealthData()
+    }
+
+    // New Hospital Appointments & Documents Helper Actions
+    suspend fun addAppointment(appt: HospitalAppointment): Long = withContext(Dispatchers.IO) {
+        dao.insertAppointment(appt)
+    }
+
+    suspend fun deleteAppointmentItem(appt: HospitalAppointment) = withContext(Dispatchers.IO) {
+        dao.deleteAppointment(appt)
+    }
+
+    suspend fun saveMedicalDocument(doc: MedicalDocument): Long = withContext(Dispatchers.IO) {
+        dao.insertMedicalDocument(doc)
+    }
+
+    suspend fun deleteMedicalDocumentItem(doc: MedicalDocument) = withContext(Dispatchers.IO) {
+        dao.deleteMedicalDocument(doc)
+    }
+
+    suspend fun updateEmergencyProfile(profile: EmergencyProfile) = withContext(Dispatchers.IO) {
+        dao.insertEmergencyProfile(profile)
+    }
+
+    suspend fun syncGoogleCalendarEvent(appt: HospitalAppointment): Boolean = withContext(Dispatchers.IO) {
+        kotlinx.coroutines.delay(1200) // simulated REST API Google Calendar synchronization
+        dao.markAppointmentSynced(appt.id)
+        return@withContext true
     }
 }

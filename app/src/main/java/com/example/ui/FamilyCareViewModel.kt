@@ -100,6 +100,15 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     val latestWatchHealthData: StateFlow<WatchHealthData?> = repository.latestWatchHealthData
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val appointments: StateFlow<List<HospitalAppointment>> = repository.allAppointments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val medicalDocuments: StateFlow<List<MedicalDocument>> = repository.allMedicalDocuments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val emergencyProfile: StateFlow<EmergencyProfile?> = repository.emergencyProfile
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private val _selectedWatchBrand = MutableStateFlow("Samsung Galaxy Watch")
     val selectedWatchBrand: StateFlow<String> = _selectedWatchBrand.asStateFlow()
 
@@ -550,6 +559,167 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
             _isSyncingWatchData.value = false
             _lastWatchSyncTime.value = System.currentTimeMillis()
             _activeNotification.value = "Synchronization completed! All smart watch health metrics uploaded safely to Family Link cloud database."
+        }
+    }
+
+    // NEW HOSPITAL APPOINTMENT MODULE VM OPERATIONS
+
+    private val _isSyncingCalendar = MutableStateFlow(false)
+    val isSyncingCalendar: StateFlow<Boolean> = _isSyncingCalendar.asStateFlow()
+
+    private val _isProcessingOcrSlips = MutableStateFlow(false)
+    val isProcessingOcrSlips: StateFlow<Boolean> = _isProcessingOcrSlips.asStateFlow()
+
+    fun addNewAppointment(
+        patient: String,
+        hospital: String,
+        doctor: String,
+        department: String,
+        timestamp: Long,
+        reminderMins: Int,
+        isReminderEnabled: Boolean,
+        notes: String,
+        qrcode: String? = null,
+        docPath: String? = null,
+        ocrText: String? = null,
+        isShared: Boolean = true,
+        treatment: String = "",
+        diag: String = ""
+    ) {
+        viewModelScope.launch {
+            val appt = HospitalAppointment(
+                patientName = patient.ifBlank { "Sompong Somdee" },
+                hospitalName = hospital,
+                doctorName = doctor,
+                department = department,
+                appointmentTimestamp = timestamp,
+                reminderMinutesBefore = reminderMins,
+                isReminderSet = isReminderEnabled,
+                notes = notes,
+                qrCodeData = qrcode,
+                documentPath = docPath,
+                ocrExtractedText = ocrText,
+                isFamilyShared = isShared,
+                isSynced = false,
+                treatmentSuggested = treatment,
+                diagnosis = diag
+            )
+            repository.addAppointment(appt)
+            _activeNotification.value = "Appointment for $doctor scheduled successfully."
+        }
+    }
+
+    fun deleteAppointment(appt: HospitalAppointment) {
+        viewModelScope.launch {
+            repository.deleteAppointmentItem(appt)
+            _activeNotification.value = "Appointment deleted successfully."
+        }
+    }
+
+    fun addMedicalDocument(title: String, type: String, appointmentId: Int?, detail: String? = null) {
+        viewModelScope.launch {
+            val doc = MedicalDocument(
+                appointmentId = appointmentId,
+                title = title,
+                documentType = type,
+                filePath = "Uploaded Document File - simulated_${System.currentTimeMillis()}.pdf",
+                timestamp = System.currentTimeMillis(),
+                extractedDetails = detail,
+                isSynced = false
+            )
+            repository.saveMedicalDocument(doc)
+            _activeNotification.value = "Medical document '$title' uploaded safely."
+        }
+    }
+
+    fun deleteMedicalDocument(doc: MedicalDocument) {
+        viewModelScope.launch {
+            repository.deleteMedicalDocumentItem(doc)
+            _activeNotification.value = "Document deleted from secure health vault."
+        }
+    }
+
+    fun updateEmergencyMedicalCard(
+        blood: String,
+        allergies: String,
+        chronic: String,
+        prescription: String,
+        contactName: String,
+        contactPhone: String,
+        hospital: String,
+        insurance: String,
+        notes: String
+    ) {
+        viewModelScope.launch {
+            val profile = EmergencyProfile(
+                id = 1,
+                patientName = "Sompong Somdee",
+                bloodType = blood,
+                allergies = allergies,
+                chronicConditions = chronic,
+                regularPrescriptions = prescription,
+                emergencyContactName = contactName,
+                emergencyContactPhone = contactPhone,
+                hospitalPreference = hospital,
+                insuranceDetails = insurance,
+                additionalNotes = notes
+            )
+            repository.updateEmergencyProfile(profile)
+            _activeNotification.value = "Emergency Medical Contact Card updated."
+        }
+    }
+
+    fun syncAppointmentWithGoogleCalendar(appt: HospitalAppointment) {
+        viewModelScope.launch {
+            _isSyncingCalendar.value = true
+            val success = repository.syncGoogleCalendarEvent(appt)
+            _isSyncingCalendar.value = false
+            if (success) {
+                _activeNotification.value = "Event '${appt.doctorName} Checkup' synchronized cleanly with Google Calendar API!"
+            }
+        }
+    }
+
+    fun triggerOcrScanSimulation(onResult: (HospitalAppointment) -> Unit) {
+        viewModelScope.launch {
+            _isProcessingOcrSlips.value = true
+            kotlinx.coroutines.delay(2000) // Simulated scanner OCR processing delay
+            _isProcessingOcrSlips.value = false
+
+            // Randomize beautiful dynamic simulation cases
+            val templates = listOf(
+                HospitalAppointment(
+                    patientName = "Sompong Somdee",
+                    hospitalName = "Vajira General Hospital",
+                    doctorName = "Dr. Kittichai (Heart Specialism)",
+                    department = "EKG Room / คลินิกประสาทวิทยา",
+                    appointmentTimestamp = System.currentTimeMillis() + 5 * 24 * 60 * 60 * 1000L,
+                    reminderMinutesBefore = 60,
+                    isReminderSet = true,
+                    notes = "Regular neural screening. Bring blood records.",
+                    qrCodeData = "VJR_APPT_S_9821_XYZ",
+                    ocrExtractedText = "VAJIRA MEDICAL SLIP\nPATIENT: SOMPONG SOMDEE\nDEPT: NEUROLOGY\nDOCTOR: DR. KITTICHAI\nTIME: 09:30 AM",
+                    isFamilyShared = true,
+                    isSynced = false
+                ),
+                HospitalAppointment(
+                    patientName = "Sompong Somdee",
+                    hospitalName = "Bangkok General Hospital",
+                    doctorName = "Dr. Suda (Audiology Section)",
+                    department = "Ear & Nose / ศูนย์หูคอจมูก",
+                    appointmentTimestamp = System.currentTimeMillis() + 8 * 24 * 60 * 60 * 1000L,
+                    reminderMinutesBefore = 120,
+                    isReminderSet = true,
+                    notes = "Hearing aid recalibration and middle ear audit.",
+                    qrCodeData = "BGH_AUD_90312",
+                    ocrExtractedText = "BANGKOK GENERAL HOSPITAL APPT\nPATIENT: SOMPONG\nSTAMP: 2026-06-11 13:00\nDEPT: AUDIOLOGY\nFEE_PAID",
+                    isFamilyShared = true,
+                    isSynced = false
+                )
+            )
+            val selected = templates.random()
+            onResult(selected)
+            _activeNotification.value = "AI OCR Camera Scan: Appointment details extracted successfully!"
         }
     }
 

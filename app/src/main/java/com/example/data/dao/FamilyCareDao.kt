@@ -83,4 +83,40 @@ interface FamilyCareDao {
 
     @Query("DELETE FROM watch_health_data")
     suspend fun clearWatchHealthData()
+
+    // Hospital Appointments
+    @Query("SELECT * FROM hospital_appointments ORDER BY appointmentTimestamp ASC")
+    fun getAllAppointments(): Flow<List<HospitalAppointment>>
+
+    @Query("SELECT * FROM hospital_appointments WHERE id = :id LIMIT 1")
+    suspend fun getAppointmentById(id: Int): HospitalAppointment?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAppointment(appointment: HospitalAppointment): Long
+
+    @Delete
+    suspend fun deleteAppointment(appointment: HospitalAppointment)
+
+    @Query("UPDATE hospital_appointments SET isSynced = 1 WHERE id = :id")
+    suspend fun markAppointmentSynced(id: Int)
+
+    // Medical Documents
+    @Query("SELECT * FROM medical_documents ORDER BY timestamp DESC")
+    fun getAllMedicalDocuments(): Flow<List<MedicalDocument>>
+
+    @Query("SELECT * FROM medical_documents WHERE appointmentId = :appointmentId ORDER BY timestamp DESC")
+    fun getDocumentsForAppointment(appointmentId: Int): Flow<List<MedicalDocument>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedicalDocument(doc: MedicalDocument): Long
+
+    @Delete
+    suspend fun deleteMedicalDocument(doc: MedicalDocument)
+
+    // Emergency Profiles
+    @Query("SELECT * FROM emergency_profiles WHERE id = 1 LIMIT 1")
+    fun getEmergencyProfile(): Flow<EmergencyProfile?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEmergencyProfile(profile: EmergencyProfile)
 }

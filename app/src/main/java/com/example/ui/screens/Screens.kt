@@ -80,6 +80,7 @@ fun AppNavigator(viewModel: FamilyCareViewModel) {
             "GroupSetup" -> GroupSetupScreen(viewModel)
             "ElderDashboard" -> ElderDashboardScreen(viewModel)
             "FamilyDashboard" -> FamilyDashboardScreen(viewModel)
+            "HospitalAppointments" -> HospitalAppointmentsScreen(viewModel)
             "Settings" -> SettingsScreen(viewModel)
         }
 
@@ -728,6 +729,9 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             fontWeight = FontWeight.Black,
                             fontSize = 15.sp
                         )
+                    }
+                    IconButton(onClick = { viewModel.navigateTo("HospitalAppointments") }) {
+                        Icon(Icons.Default.LocalHospital, contentDescription = "Hospital Appointments", tint = SaniGreen)
                     }
                     IconButton(onClick = { viewModel.navigateTo("Settings") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
@@ -1821,6 +1825,9 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                             fontWeight = FontWeight.Black,
                             fontSize = 15.sp
                         )
+                    }
+                    IconButton(onClick = { viewModel.navigateTo("HospitalAppointments") }) {
+                        Icon(Icons.Default.LocalHospital, contentDescription = "Hospital Appointments", tint = SaniGreen)
                     }
                     IconButton(onClick = { viewModel.navigateTo("Settings") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
