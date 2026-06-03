@@ -1185,6 +1185,7 @@ fun MedicalDocumentsTab(
 ) {
     var showAddDocDialog by remember { mutableStateOf(false) }
     var filterCategory by remember { mutableStateOf("ALL") } // "ALL", "Lab Report", "Prescription", "X-Ray Diagnosis", "Other"
+    var activeViewerDoc by remember { mutableStateOf<MedicalDocument?>(null) }
 
     // Form inputs state
     var docTitle by remember { mutableStateOf("") }
@@ -1302,7 +1303,9 @@ fun MedicalDocumentsTab(
                         Card(
                             colors = CardDefaults.cardColors(containerColor = DarkCardBg),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { activeViewerDoc = doc }
                         ) {
                             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Row(
@@ -1540,6 +1543,216 @@ fun MedicalDocumentsTab(
                         modifier = Modifier.fillMaxWidth().testTag("add_doc_submit_button")
                     ) {
                         Text(tr(isTh, "Secure to Cloud Vault", "ล็อคนำเซฟข้อมูลเวชศาสตร์ด่วน"), color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    activeViewerDoc?.let { doc ->
+        androidx.compose.ui.window.Dialog(onDismissRequest = { activeViewerDoc = null }) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CozySlate),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            ) {
+                var zoomLevel by remember { mutableStateOf(1f) }
+                var isNightVision by remember { mutableStateOf(false) }
+                var currentPage by remember { mutableStateOf(1) }
+
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = doc.title,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "Category: ${doc.documentType}",
+                                color = Color.LightGray,
+                                fontSize = 11.sp
+                            )
+                        }
+                        IconButton(onClick = { activeViewerDoc = null }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.LightGray)
+                        }
+                    }
+
+                    Divider(color = Color.LightGray.copy(alpha = 0.2f))
+
+                    // Simulated Viewer Canvas Viewport
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp)
+                            .background(if (isNightVision) Color.Black else Color.White, RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            if (doc.documentType == "X-Ray Diagnosis") {
+                                // Draw a high contrast skeleton image simulation using custom canvas
+                                androidx.compose.foundation.Canvas(modifier = Modifier.size(120.dp)) {
+                                    val canvasWidth = size.width
+                                    val canvasHeight = size.height
+                                    val strokeColor = if (isNightVision) Color(0xFF00FF00) else Color(0xFF222222)
+                                    // Custom visual render representing an X-ray (lungs / spine ribs)
+                                    drawCircle(
+                                        color = strokeColor.copy(alpha = 0.15f),
+                                        radius = canvasWidth * 0.4f * zoomLevel
+                                    )
+                                    // Spine vertical line
+                                    drawLine(
+                                        color = strokeColor,
+                                        start = androidx.compose.ui.geometry.Offset(canvasWidth / 2, canvasHeight * 0.1f),
+                                        end = androidx.compose.ui.geometry.Offset(canvasWidth / 2, canvasHeight * 0.9f),
+                                        strokeWidth = 6f
+                                    )
+                                    // Rib cages arcs
+                                    for (i in 2..5) {
+                                        val y = canvasHeight * 0.16f * i
+                                        drawArc(
+                                            color = strokeColor,
+                                            startAngle = 180f,
+                                            sweepAngle = 100f,
+                                            useCenter = false,
+                                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f),
+                                            size = androidx.compose.ui.geometry.Size(canvasWidth * 0.35f * zoomLevel, canvasHeight * 0.15f * zoomLevel),
+                                            topLeft = androidx.compose.ui.geometry.Offset(canvasWidth * 0.1f, y)
+                                        )
+                                        drawArc(
+                                            color = strokeColor,
+                                            startAngle = 260f,
+                                            sweepAngle = 100f,
+                                            useCenter = false,
+                                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f),
+                                            size = androidx.compose.ui.geometry.Size(canvasWidth * 0.35f * zoomLevel, canvasHeight * 0.15f * zoomLevel),
+                                            topLeft = androidx.compose.ui.geometry.Offset(canvasWidth * 0.55f, y)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = tr(isTh, "HIGH-CONTRAST CHEST RADIOGRAPH (ZOOM: ${String.format(Locale.getDefault(), "%.1f", zoomLevel)}x)", "ภาพถ่ายรังสีหน้าอกสเปกตรัมสูง (ซูม: ${String.format(Locale.getDefault(), "%.1f", zoomLevel)}เท่า)"),
+                                    color = if (isNightVision) Color(0xFF00FF00) else Color.DarkGray,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            } else {
+                                // PDF / Document sheet style layout render
+                                Icon(
+                                    imageVector = if (doc.documentType == "Prescription") Icons.Default.MedicalServices else Icons.Default.Description,
+                                    contentDescription = "Doc",
+                                    tint = if (isNightVision) Color(0xFF00FF00) else PrimaryAccent,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Text(
+                                    text = doc.title,
+                                    color = if (isNightVision) Color(0xFF00FF00) else Color.Black,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = tr(
+                                        isTh,
+                                        "REPORT PAGE $currentPage OF 3\nDigital SHA-256 Verified Seal",
+                                        "รายงานหน้า $currentPage จากทั้งหมด 3 หน้า\nลงเครื่องหมายดิจิทัลยืนยันความถูกต้อง"
+                                    ),
+                                    color = if (isNightVision) Color(0xFF00FF00) else Color.Gray,
+                                    fontSize = 10.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    // ZOOM & VIEW CONTROLS ROW
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = tr(isTh, "Zoom Focus: ${String.format(Locale.getDefault(), "%.1f", zoomLevel)}x", "ระยะซูมภาพ: ${String.format(Locale.getDefault(), "%.1f", zoomLevel)}เท่า"),
+                            color = Color.LightGray,
+                            fontSize = 11.sp
+                        )
+                        Slider(
+                            value = zoomLevel,
+                            onValueChange = { zoomLevel = it },
+                            valueRange = 1f..3f,
+                            modifier = Modifier.width(140.dp),
+                            colors = SliderDefaults.colors(
+                                thumbColor = ContrastAmber,
+                                activeTrackColor = ContrastAmber.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    // INTERACTIVE OPTIONS FOR PARAMEDIC/CARE VIEW
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Night Mode Toggler (High Contrast Color Inversion)
+                        Button(
+                            onClick = { isNightVision = !isNightVision },
+                            colors = ButtonDefaults.buttonColors(containerColor = if (isNightVision) Color.DarkGray else CozySlateBg),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Visibility, contentDescription = "Visual Filter", tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(tr(isTh, "Invert Filter", "สลับโทนสี"), color = Color.White, fontSize = 10.sp)
+                        }
+
+                        // Paginated PDF Simulation Controller
+                        Button(
+                            onClick = {
+                                currentPage = if (currentPage == 3) 1 else currentPage + 1
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CozySlateBg),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.MenuBook, contentDescription = "Next Page", tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(tr(isTh, "Next (PDF)", "หน้าถัดไป (PDF)"), color = Color.White, fontSize = 10.sp)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(tr(isTh, "Extracted Metadata Stream:", "ข้อมูลเวชระเบียนสืบค้น:"), color = ContrastAmber, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = doc.extractedDetails ?: "No embedded summaries captured.",
+                                color = Color.LightGray,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }

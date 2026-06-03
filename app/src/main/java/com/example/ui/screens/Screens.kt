@@ -82,6 +82,8 @@ fun AppNavigator(viewModel: FamilyCareViewModel) {
             "FamilyDashboard" -> FamilyDashboardScreen(viewModel)
             "HospitalAppointments" -> HospitalAppointmentsScreen(viewModel)
             "Settings" -> SettingsScreen(viewModel)
+            "EmergencyCenter" -> EmergencyCenterScreen(viewModel)
+            "AccessibilitySettings" -> AccessibilitySettingsScreen(viewModel)
         }
 
         // Live notification banner Overlay
@@ -783,6 +785,68 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             Icon(Icons.Default.Check, contentDescription = "Mode", tint = Color(0xFF2EC4B6), modifier = Modifier.size(16.dp))
                             Text(tr(isTh, "Elder Mode Screen", "โหมดผู้สูงอายุ"), color = Color(0xFF2EC4B6), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
+                    }
+                }
+            }
+
+            // EMERGENCY GATEWAY & HOTKEY CENTRE
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.navigateTo("EmergencyCenter") }
+                        .testTag("elder_emergency_hub_card")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color(0xFFC30000),
+                                        Color(0xFF7A0000)
+                                    )
+                                )
+                            )
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Emergency,
+                                contentDescription = "Emergency Hub",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = tr(isTh, "EMERGENCY DISPATCH CENTER", "ศูนย์ช่วยเหลืออุบัติภัยและปุ่ม SOS"),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = tr(isTh, "Speed dial rescue, map live positions, and trigger manual SOS", "สายด่วนสพฉ. ประสานรถกู้ชีพ แผนที่พิกัด และทางลัดปุ่มช่วยชีวิต"),
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open",
+                            tint = Color.White
+                        )
                     }
                 }
             }
@@ -1845,6 +1909,68 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // EMERGENCY GATEWAY & HOTKEY CENTRE
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.navigateTo("EmergencyCenter") }
+                        .testTag("caregiver_emergency_hub_card")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color(0xFFC30000),
+                                        Color(0xFF7A0000)
+                                    )
+                                )
+                            )
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Emergency,
+                                contentDescription = "Emergency Hub",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = tr(isTh, "EMERGENCY DISPATCH CENTER", "ศูนย์ช่วยเหลืออุบัติภัยและปุ่ม SOS"),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = tr(isTh, "Speed dial rescue channels, map positions, and configure security keys", "สายด่วนสพฉ. ประสานรถกู้ชีพ แผนที่พิกัด และทางลัดปุ่มช่วยชีวิต"),
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+
             // HIGH CONTRAST SOS ALERT NOTIFIER WINDOWS
             item {
                 Row(
@@ -2549,6 +2675,56 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                                 color = Color.LightGray,
                                 fontSize = 12.sp
                             )
+                        }
+                    }
+                }
+            }
+
+            // SYSTEM SHIELD PROTECTION CONFIGURATION
+            val context = LocalContext.current
+            Card(
+                colors = CardDefaults.cardColors(containerColor = DarkCardBg),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(tr(isTh, "Security Shield & Accessibility Helpers", "ระบบป้องกันเบื้องหลังแอป & ปุ่มอำนวยความสะดวก"), color = ContrastAmber, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(tr(isTh, "Protect your app from platform termination and set up physical key shortcut triggers.", "ช่วยป้องกันระบบจัดการพลังงานแอนดรอยด์จากตัดแอป พร้อมเปิดตั้งปุ่มลัดช่วยชีวิตข้างตัวบอดี้เครื่อง"), color = Color.LightGray, fontSize = 11.sp)
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Navigation button to accessibility settings screen
+                        Button(
+                            onClick = { viewModel.navigateTo("AccessibilitySettings") },
+                            colors = ButtonDefaults.buttonColors(containerColor = CozySlateBg),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Default.Accessibility, contentDescription = "Keys", tint = Color.White, modifier = Modifier.size(16.dp))
+                                Text(tr(isTh, "Hotkeys Setup", "ตั้งปุ่มลัดช่วยชีพ"), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        // Direct native prompt to exclude application from battery life optimizers
+                        Button(
+                            onClick = {
+                                com.example.service.BatteryOptimizationHelper.requestIgnoreBatteryOptimization(context)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Default.BatterySaver, contentDescription = "Battery", tint = Color.White, modifier = Modifier.size(16.dp))
+                                Text(tr(isTh, "Avoid Battery Saver", "ต้านโหมดประหยัด"), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
