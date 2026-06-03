@@ -29,6 +29,14 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    // Identity State tracking
+    private val _identityState = MutableStateFlow<com.example.domain.identity.IdentityState>(com.example.domain.identity.IdentityState.Idle)
+    val identityState: StateFlow<com.example.domain.identity.IdentityState> = _identityState.asStateFlow()
+    private val thaiDService = com.example.service.ThaiDAuthService()
+
+    // MOPH Integration placeholders
+    private val mophAppointmentRepository = com.example.data.moph.MophAppointmentRepository()
+
     // Language state default to true for Thai language
     private val _isThaiLanguage = MutableStateFlow(true)
     val isThaiLanguage: StateFlow<Boolean> = _isThaiLanguage.asStateFlow()
@@ -379,6 +387,38 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     fun handleLogout() {
         _currentUser.value = null
         navigateTo("Login")
+    }
+
+    // ThaiD Integration Actions
+    fun initiateThaiDAuth() {
+        _identityState.value = com.example.domain.identity.IdentityState.Loading
+        // จำลองการเปิด Intent ไปยังแอป ThaiD
+        val intent = thaiDService.getAuthIntent()
+        Log.d("ThaiDAuth", "Initiating OIDC Auth: $intent")
+        
+        // จำลองการ callback กลับมาใน 2 วินาทีหลังจาก init
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(2000)
+            handleThaiDCallback("mock_callback_data")
+        }
+    }
+
+    private fun handleThaiDCallback(data: String) {
+        val result = thaiDService.handleCallback(data)
+        when (result) {
+            is com.example.domain.auth.AuthResult.Success -> {
+                _identityState.value = com.example.domain.identity.IdentityState.Success(result.identity)
+                // อัปเดตข้อมูลผู้ใช้หลักถ้าจำเป็น
+                val currentUserVal = _currentUser.value
+                if (currentUserVal != null) {
+                    // Update user profile to include identity info
+                }
+            }
+            is com.example.domain.auth.AuthResult.Error -> {
+                _identityState.value = com.example.domain.identity.IdentityState.Error(result.message)
+            }
+            is com.example.domain.auth.AuthResult.Loading -> _identityState.value = com.example.domain.identity.IdentityState.Loading
+        }
     }
 
     // Emergency Action Execution
