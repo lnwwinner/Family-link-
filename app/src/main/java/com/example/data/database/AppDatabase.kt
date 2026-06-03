@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.data.dao.FamilyCareDao
+import com.example.data.dao.MedicalFacilityDao
 import com.example.data.model.*
 
 @Database(
@@ -18,14 +19,16 @@ import com.example.data.model.*
         WatchHealthData::class,
         HospitalAppointment::class,
         MedicalDocument::class,
-        EmergencyProfile::class
+        EmergencyProfile::class,
+        MedicalFacilityEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun familyCareDao(): FamilyCareDao
+    abstract fun medicalFacilityDao(): MedicalFacilityDao
 
     companion object {
         @Volatile

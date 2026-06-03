@@ -27,41 +27,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-
-// ... existing code ...
-
-@Composable
-fun FacilityLocatorTab(
-    viewModel: FamilyCareViewModel,
-    isTh: Boolean
-) {
-    val facilities by viewModel.nearbyFacilities.collectAsState()
-    LaunchedEffect(Unit) {
-        viewModel.searchNearbyFacilities(13.75, 100.5)
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(facilities) { facility ->
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(facility.name, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(facility.type, color = Color.LightGray)
-                    Text("Distance: ${facility.distanceKm} km", color = Color.White)
-                }
-            }
-        }
-    }
-}
 import com.example.data.model.HospitalAppointment
 import com.example.data.model.MedicalDocument
 import com.example.data.model.EmergencyProfile
 import com.example.ui.FamilyCareViewModel
+
+
+
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -247,9 +219,35 @@ fun HospitalAppointmentsScreen(viewModel: FamilyCareViewModel) {
     }
 }
 
-// ==========================================
-// TAB 0: APPOINTMENT LIST
-// ==========================================
+@Composable
+fun FacilityLocatorTab(
+    viewModel: FamilyCareViewModel,
+    isTh: Boolean
+) {
+    val facilities by viewModel.nearbyFacilities.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.searchNearbyFacilities(13.75, 100.5)
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(facilities) { facility ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CozySlate),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(facility.name, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(facility.type, color = Color.LightGray)
+                    Text("Distance: ${facility.distanceKm} km", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun AppointmentListTab(
     viewModel: FamilyCareViewModel,

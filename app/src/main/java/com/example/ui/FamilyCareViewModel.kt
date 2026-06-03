@@ -38,7 +38,8 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     private val mophAppointmentRepository = com.example.data.moph.MophAppointmentRepository()
     
     // Facility Locator state
-    private val facilityRepository = com.example.data.medical.MockMedicalFacilityRepository()
+    private val facilityDao = com.example.data.database.AppDatabase.getDatabase(getApplication()).medicalFacilityDao()
+    private val facilityRepository = com.example.data.medical.LocalFacilityRepository(facilityDao)
     private val _nearbyFacilities = MutableStateFlow<List<com.example.domain.medical.MedicalFacility>>(emptyList())
     val nearbyFacilities: StateFlow<List<com.example.domain.medical.MedicalFacility>> = _nearbyFacilities.asStateFlow()
 
