@@ -111,7 +111,13 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun setupSensors() {
         try {
-            sensorManager = getApplication<Application>().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            val app = getApplication<Application>()
+            val sensorContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                app.createAttributionContext("sensors")
+            } else {
+                app
+            }
+            sensorManager = sensorContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
             accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
             if (accelerometer != null && _fallDetectionEnabled.value) {
                 sensorManager?.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)

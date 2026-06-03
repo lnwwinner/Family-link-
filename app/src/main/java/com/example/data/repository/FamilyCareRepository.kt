@@ -158,8 +158,14 @@ class FamilyCareRepository(
             activeRecordFile = file
             recordingStartTime = System.currentTimeMillis()
 
+            val recordingContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.createAttributionContext("microphone")
+            } else {
+                context
+            }
+
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(context).apply {
+                MediaRecorder(recordingContext).apply {
                     setAudioSource(MediaRecorder.AudioSource.MIC)
                     setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
                     setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
