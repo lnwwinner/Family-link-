@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">แฟมิลี่แคร์ ลิงก์</string>
+    <string name="accessibility_service_desc">เปิดการจับการกดปุ่มทางกายภาพภายนอก/และปุ่มระดับเสียงเพื่อวิเคราะห์สัญญาณฉุกเฉินช่วยชีวิต SOS</string>
 </resources>

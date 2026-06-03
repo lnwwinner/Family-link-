@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Family Care Link</string>
+    <string name="accessibility_service_desc">Enables hardware hotkeys monitoring for family safety and custom volume controls for trigger-alert SOS operations.</string>
 </resources>
