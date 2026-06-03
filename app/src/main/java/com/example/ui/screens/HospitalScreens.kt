@@ -27,6 +27,37 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+
+// ... existing code ...
+
+@Composable
+fun FacilityLocatorTab(
+    viewModel: FamilyCareViewModel,
+    isTh: Boolean
+) {
+    val facilities by viewModel.nearbyFacilities.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.searchNearbyFacilities(13.75, 100.5)
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(facilities) { facility ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(facility.name, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(facility.type, color = Color.LightGray)
+                    Text("Distance: ${facility.distanceKm} km", color = Color.White)
+                }
+            }
+        }
+    }
+}
 import com.example.data.model.HospitalAppointment
 import com.example.data.model.MedicalDocument
 import com.example.data.model.EmergencyProfile
@@ -122,7 +153,8 @@ fun HospitalAppointmentsScreen(viewModel: FamilyCareViewModel) {
                     Triple(1, Icons.Default.Assignment, tr(isTh, "Info & QR", "ดีเทลนัด")),
                     Triple(2, Icons.Default.Folder, tr(isTh, "Files", "คลังเวชระเบียน")),
                     Triple(3, Icons.Default.Timeline, tr(isTh, "History", "ประวัติหน้างาน")),
-                    Triple(4, Icons.Default.HealthAndSafety, tr(isTh, "Emergency", "บัตรโรคประจำตัว"))
+                    Triple(4, Icons.Default.HealthAndSafety, tr(isTh, "Emergency", "บัตรโรคประจำตัว")),
+                    Triple(5, Icons.Default.LocationOn, tr(isTh, "Locator", "ค้นหาโรงพยาบาล"))
                 )
 
                 navItems.forEach { (index, icon, label) ->
@@ -204,6 +236,10 @@ fun HospitalAppointmentsScreen(viewModel: FamilyCareViewModel) {
                         viewModel = viewModel,
                         isTh = isTh,
                         emergencyProfile = emergencyCard
+                    )
+                    5 -> FacilityLocatorTab(
+                        viewModel = viewModel,
+                        isTh = isTh
                     )
                 }
             }

@@ -36,6 +36,11 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
 
     // MOPH Integration placeholders
     private val mophAppointmentRepository = com.example.data.moph.MophAppointmentRepository()
+    
+    // Facility Locator state
+    private val facilityRepository = com.example.data.medical.MockMedicalFacilityRepository()
+    private val _nearbyFacilities = MutableStateFlow<List<com.example.domain.medical.MedicalFacility>>(emptyList())
+    val nearbyFacilities: StateFlow<List<com.example.domain.medical.MedicalFacility>> = _nearbyFacilities.asStateFlow()
 
     // Language state default to true for Thai language
     private val _isThaiLanguage = MutableStateFlow(true)
@@ -419,6 +424,11 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
             }
             is com.example.domain.auth.AuthResult.Loading -> _identityState.value = com.example.domain.identity.IdentityState.Loading
         }
+    }
+
+    // Search for facilities
+    fun searchNearbyFacilities(lat: Double, lon: Double) {
+        _nearbyFacilities.value = facilityRepository.getNearbyFacilities(lat, lon)
     }
 
     // Emergency Action Execution
