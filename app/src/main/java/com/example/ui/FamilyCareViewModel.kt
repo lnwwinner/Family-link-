@@ -47,8 +47,23 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     private val _isThaiLanguage = MutableStateFlow(true)
     val isThaiLanguage: StateFlow<Boolean> = _isThaiLanguage.asStateFlow()
 
+    // Accessibility state
+    private val _isHighContrast = MutableStateFlow(false)
+    val isHighContrast: StateFlow<Boolean> = _isHighContrast.asStateFlow()
+
+    private val _fontSizeMultiplier = MutableStateFlow(1.0f)
+    val fontSizeMultiplier: StateFlow<Float> = _fontSizeMultiplier.asStateFlow()
+
     fun toggleLanguage() {
         _isThaiLanguage.value = !_isThaiLanguage.value
+    }
+
+    fun toggleHighContrast() {
+        _isHighContrast.value = !_isHighContrast.value
+    }
+
+    fun setFontSizeMultiplier(multiplier: Float) {
+        _fontSizeMultiplier.value = multiplier
     }
 
     // Navigation state simulation: "Splash", "Login", "Register", "GroupSetup", "ElderDashboard", "FamilyDashboard", "Settings"
@@ -448,6 +463,28 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
         return earthRadius * c
     }
+
+    // Voice & Assistant
+    fun processVoiceCommand(text: String, apiKey: String) {
+        viewModelScope.launch {
+            if (text.contains("ฉุกเฉิน", ignoreCase = true) || text.contains("SOS", ignoreCase = true)) {
+                repository.triggerSOS("Elderly User")
+            } else {
+                val request = com.example.data.service.GenerateContentRequest(
+                    listOf(com.example.data.service.Content(listOf(com.example.data.service.Part("ประเมินสุขภาพจากข้อความนี้: $text"))))
+                )
+                val response = com.example.data.service.RetrofitClient.service.generateContent(apiKey, request)
+                _voiceAssistantResponse.value = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "ไม่สามารถประเมินได้"
+            }
+        }
+    }
+
+    fun triggerVoiceReminder(activityName: String) {
+        com.example.util.VoiceAnnouncementManager.announce(activityName)
+    }
+    
+    private val _voiceAssistantResponse = MutableStateFlow("")
+    val voiceAssistantResponse: StateFlow<String> = _voiceAssistantResponse.asStateFlow()
 
     // Emergency Action Execution
     suspend fun triggerEmergencySOS(customMessage: String? = null) {
