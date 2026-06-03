@@ -50,7 +50,7 @@ class FamilyCareRepository(
     // Provision default group & users for premium startup experience
     suspend fun initializeDefaultData() = withContext(Dispatchers.IO) {
         // Mock default elder
-        val defaultGroup = FamilyGroup("FAM-Care-419", "Home Care Alpha", "owner123")
+        val defaultGroup = FamilyGroup("FAM-Care-419", "Home Care Alpha", "FAM-Care-419", "owner123")
         dao.insertGroup(defaultGroup)
 
         val elderUser = User(
@@ -260,10 +260,6 @@ class FamilyCareRepository(
     }
 
     // Users & Session
-    suspend fun getGroupMembers(groupCode: String): Flow<List<User>> {
-        return dao.getUsersByGroup(groupCode)
-    }
-
     suspend fun registerOrUpdateUser(user: User) {
         dao.insertUser(user)
     }
@@ -274,9 +270,51 @@ class FamilyCareRepository(
 
     suspend fun createGroup(name: String, ownerId: String): FamilyGroup {
         val randomCode = "FAM-${(1000..9999).random()}"
-        val group = FamilyGroup(randomCode, name, ownerId)
+        val group = FamilyGroup(java.util.UUID.randomUUID().toString(), name, randomCode, ownerId)
         dao.insertGroup(group)
         return group
+    }
+
+    // Family Management
+    suspend fun createFamilyGroup(groupId: String, groupName: String, groupCode: String, ownerId: String): FamilyGroup {
+        val group = FamilyGroup(groupId, groupName, groupCode, ownerId)
+        dao.insertGroup(group)
+        return group
+    }
+    
+    suspend fun getFamilyGroup(groupId: String): FamilyGroup? {
+        return dao.getGroupById(groupId)
+    }
+    
+    suspend fun addFamilyMember(groupId: String, userId: String, role: String, relationship: String) {
+        val member = FamilyMember(groupId = groupId, userId = userId, role = role, relationship = relationship)
+        dao.insertMember(member)
+    }
+    
+    suspend fun removeFamilyMember(member: FamilyMember) {
+        dao.removeMember(member)
+    }
+    
+    fun getFamilyMembers(groupId: String): Flow<List<FamilyMember>> {
+        return dao.getMembersByGroup(groupId)
+    }
+    
+    suspend fun requestToJoinGroup(groupId: String, userId: String) {
+        val request = JoinRequest(groupId = groupId, userId = userId, status = "PENDING")
+        dao.insertJoinRequest(request)
+    }
+    
+    suspend fun updateJoinRequest(requestId: Int, status: String) {
+        dao.updateJoinRequestStatus(requestId, status)
+    }
+    
+    suspend fun addTrustedDevice(deviceId: String, userId: String, deviceName: String, isTrusted: Boolean) {
+        val device = TrustedDevice(deviceId, userId, deviceName, isTrusted)
+        dao.insertTrustedDevice(device)
+    }
+    
+    fun getTrustedDevicesFlow(userId: String): Flow<List<TrustedDevice>> {
+        return dao.getTrustedDevices(userId)
     }
 
     // Emergency Logging (SOS triggers)

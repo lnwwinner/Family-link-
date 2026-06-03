@@ -364,19 +364,19 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
             val currentUserVal = _currentUser.value ?: return@launch
             if (isCreate) {
                 val group = repository.createGroup(groupNameCode, currentUserVal.id)
-                val updatedUser = currentUserVal.copy(groupCode = group.code)
+                val updatedUser = currentUserVal.copy(groupCode = group.groupCode)
                 repository.registerOrUpdateUser(updatedUser)
                 _currentUser.value = updatedUser
             } else {
                 val group = repository.findGroup(groupNameCode)
                 if (group != null) {
-                    val updatedUser = currentUserVal.copy(groupCode = group.code)
+                    val updatedUser = currentUserVal.copy(groupCode = group.groupCode)
                     repository.registerOrUpdateUser(updatedUser)
                     _currentUser.value = updatedUser
                 } else {
                     _activeNotification.value = "Invalid Group Code! Created a new temporary group for you."
                     val groupAlt = repository.createGroup("My Family Link", currentUserVal.id)
-                    val updatedUser = currentUserVal.copy(groupCode = groupAlt.code)
+                    val updatedUser = currentUserVal.copy(groupCode = groupAlt.groupCode)
                     repository.registerOrUpdateUser(updatedUser)
                     _currentUser.value = updatedUser
                 }
@@ -429,7 +429,24 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
 
     // Search for facilities
     fun searchNearbyFacilities(lat: Double, lon: Double) {
-        _nearbyFacilities.value = facilityRepository.getNearbyFacilities(lat, lon)
+        val allFacilities = facilityRepository.getNearbyFacilities(lat, lon)
+        _nearbyFacilities.value = allFacilities
+            .map { facility ->
+                val dist = calculateDistance(lat, lon, facility.latitude, facility.longitude)
+                facility.copy(distanceKm = dist)
+            }
+            .sortedBy { it.distanceKm }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371.0 // km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return earthRadius * c
     }
 
     // Emergency Action Execution

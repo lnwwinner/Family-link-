@@ -61,12 +61,42 @@ interface FamilyCareDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMedicationLog(log: MedicationLog)
 
-    // Family Group
-    @Query("SELECT * FROM family_groups WHERE code = :code LIMIT 1")
-    suspend fun getGroupByCode(code: String): FamilyGroup?
+    // Family Groups
+    @Query("SELECT * FROM family_groups WHERE groupId = :groupId LIMIT 1")
+    suspend fun getGroupById(groupId: String): FamilyGroup?
+    
+    @Query("SELECT * FROM family_groups WHERE groupCode = :groupCode LIMIT 1")
+    suspend fun getGroupByCode(groupCode: String): FamilyGroup?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGroup(group: FamilyGroup)
+
+    // Family Members
+    @Query("SELECT * FROM family_members WHERE groupId = :groupId")
+    fun getMembersByGroup(groupId: String): Flow<List<FamilyMember>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMember(member: FamilyMember)
+
+    @Delete
+    suspend fun removeMember(member: FamilyMember)
+
+    // Join Requests
+    @Query("SELECT * FROM join_requests WHERE groupId = :groupId AND status = 'PENDING'")
+    fun getPendingJoinRequests(groupId: String): Flow<List<JoinRequest>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJoinRequest(request: JoinRequest)
+
+    @Query("UPDATE join_requests SET status = :status WHERE requestId = :requestId")
+    suspend fun updateJoinRequestStatus(requestId: Int, status: String)
+
+    // Trusted Devices
+    @Query("SELECT * FROM trusted_devices WHERE userId = :userId")
+    fun getTrustedDevices(userId: String): Flow<List<TrustedDevice>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTrustedDevice(device: TrustedDevice)
 
     // Watch Health Data
     @Query("SELECT * FROM watch_health_data ORDER BY timestamp DESC")

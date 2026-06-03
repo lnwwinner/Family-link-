@@ -62,9 +62,39 @@ data class MedicationLog(
 
 @Entity(tableName = "family_groups")
 data class FamilyGroup(
-    @PrimaryKey val code: String, // Dynamic generated code, e.g. "FAM-9104"
+    @PrimaryKey val groupId: String,
     val groupName: String,
-    val ownerId: String
+    val groupCode: String,
+    val ownerId: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "family_members")
+data class FamilyMember(
+    @PrimaryKey(autoGenerate = true) val memberId: Int = 0,
+    val groupId: String,
+    val userId: String,
+    val role: String, // PATIENT, ADMIN, MEMBER, CAREGIVER, MEDICAL_CONTACT, EMERGENCY_CONTACT
+    val relationship: String,
+    val joinedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "join_requests")
+data class JoinRequest(
+    @PrimaryKey(autoGenerate = true) val requestId: Int = 0,
+    val groupId: String,
+    val userId: String,
+    val status: String, // PENDING, APPROVED, REJECTED
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "trusted_devices")
+data class TrustedDevice(
+    @PrimaryKey val deviceId: String,
+    val userId: String,
+    val deviceName: String,
+    val isTrusted: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "watch_health_data")
