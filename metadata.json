@@ -1,0 +1,6 @@
+{
+  "name": "Family Care Link",
+  "description": "Family Care Link is an elderly care and emergency communication platform featuring 1-button SOS, fall detection, medication logs, list of active logs, and client-family status sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
