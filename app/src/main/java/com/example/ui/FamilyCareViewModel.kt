@@ -29,6 +29,14 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    // Language state default to true for Thai language
+    private val _isThaiLanguage = MutableStateFlow(true)
+    val isThaiLanguage: StateFlow<Boolean> = _isThaiLanguage.asStateFlow()
+
+    fun toggleLanguage() {
+        _isThaiLanguage.value = !_isThaiLanguage.value
+    }
+
     // Navigation state simulation: "Splash", "Login", "Register", "GroupSetup", "ElderDashboard", "FamilyDashboard", "Settings"
     private val _currentScreen = MutableStateFlow("Splash")
     val currentScreen: StateFlow<String> = _currentScreen.asStateFlow()

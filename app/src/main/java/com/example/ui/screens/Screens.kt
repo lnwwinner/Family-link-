@@ -54,6 +54,11 @@ val SaniGreen = Color(0xFF2EC4B6)
 val SoftLightBg = Color(0xFFF7F9FC)
 val ContrastAmber = Color(0xFFFFB703)
 
+// Localization helper function
+fun tr(isTh: Boolean, en: String, th: String): String {
+    return if (isTh) th else en
+}
+
 @Composable
 fun AppNavigator(viewModel: FamilyCareViewModel) {
     val currentScreen by viewModel.currentScreen.collectAsState()
@@ -118,6 +123,8 @@ fun AppNavigator(viewModel: FamilyCareViewModel) {
 
 @Composable
 fun SplashScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
+
     LaunchedEffect(Unit) {
         delay(2500)
         // Transition based on if we have a default log in session loaded
@@ -164,7 +171,7 @@ fun SplashScreen(viewModel: FamilyCareViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "FAMILY CARE LINK",
+                text = tr(isTh, "FAMILY CARE LINK", "แฟมิลี่แคร์ ลิงก์"),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Black,
                     color = Color.White,
@@ -173,10 +180,12 @@ fun SplashScreen(viewModel: FamilyCareViewModel) {
             )
 
             Text(
-                text = "Emergency Companion & Vital Connect",
+                text = tr(isTh, "Emergency Companion & Vital Connect", "เพื่อนคู่คิดเพื่อความปลอดภัยและเชื่อมต่อครอบครัว"),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     color = Color.LightGray.copy(alpha = 0.8f)
-                )
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
             CircularProgressIndicator(
@@ -190,6 +199,7 @@ fun SplashScreen(viewModel: FamilyCareViewModel) {
 
 @Composable
 fun LoginScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     var email by remember { mutableStateOf("sompong@care.com") }
     var password by remember { mutableStateOf("123456") }
     var selectedRole by remember { mutableStateOf("Elderly") } // "Elderly" or "Family Member"
@@ -201,6 +211,19 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Floating Language Switcher
+        TextButton(
+            onClick = { viewModel.toggleLanguage() },
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp)
+        ) {
+            Text(
+                text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                color = ContrastAmber,
+                fontWeight = FontWeight.Black,
+                fontSize = 15.sp
+            )
+        }
+
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -214,7 +237,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                     modifier = Modifier.size(64.dp)
                 )
                 Text(
-                    text = "Log In",
+                    text = tr(isTh, "Log In", "เข้าสู่ระบบ"),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -222,7 +245,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "Access Family Care Support Portal",
+                    text = tr(isTh, "Access Family Care Support Portal", "เข้าสู่ระบบการดูแลเชื่อมโยงเพื่อครอบครัวของคุณ"),
                     color = Color.LightGray,
                     fontSize = 14.sp
                 )
@@ -258,7 +281,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                                 .wrapContentSize(Alignment.Center)
                         ) {
                             Text(
-                                text = role,
+                                text = tr(isTh, role, if (role == "Elderly") "ผู้สูงอายุ" else "สมาชิกในครอบครัว"),
                                 color = if (isSelected) Color.White else Color.LightGray,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -272,7 +295,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email Address", color = Color.LightGray) },
+                    label = { Text(tr(isTh, "Email Address", "ที่อยู่อีเมล"), color = Color.LightGray) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -288,7 +311,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password", color = Color.LightGray) },
+                    label = { Text(tr(isTh, "Password", "รหัสผ่าน"), color = Color.LightGray) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -311,7 +334,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                         .testTag("submit_button"),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Secure Log In", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(tr(isTh, "Secure Log In", "เข้าสู่ระบบอย่างปลอดภัย"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
@@ -319,7 +342,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
                 TextButton(
                     onClick = { viewModel.navigateTo("Register") }
                 ) {
-                    Text("Don't have an account? Sign Up", color = ContrastAmber, fontSize = 16.sp)
+                    Text(tr(isTh, "Don't have an account? Sign Up", "ยังไม่มีบัญชีใช่หรือไม่? ลงทะเบียนใหม่"), color = ContrastAmber, fontSize = 16.sp)
                 }
             }
         }
@@ -328,6 +351,7 @@ fun LoginScreen(viewModel: FamilyCareViewModel) {
 
 @Composable
 fun RegisterScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf("Elderly") }
@@ -339,6 +363,19 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Floating Language Switcher
+        TextButton(
+            onClick = { viewModel.toggleLanguage() },
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp)
+        ) {
+            Text(
+                text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                color = ContrastAmber,
+                fontWeight = FontWeight.Black,
+                fontSize = 15.sp
+            )
+        }
+
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -346,14 +383,14 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
         ) {
             item {
                 Text(
-                    text = "Create Account",
+                    text = tr(isTh, "Create Account", "สร้างบัญชีใหม่"),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 )
                 Text(
-                    text = "Sign up to link with your relatives",
+                    text = tr(isTh, "Sign up to link with your relatives", "สมัครใช้งานเพื่อเชื่อมต่อกับกลุ่มเครือญาติของคุณ"),
                     color = Color.LightGray,
                     fontSize = 14.sp
                 )
@@ -363,7 +400,7 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Full Name", color = Color.LightGray) },
+                    label = { Text(tr(isTh, "Full Name", "ชื่อ-นามสกุลจริง"), color = Color.LightGray) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -379,7 +416,7 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email Address", color = Color.LightGray) },
+                    label = { Text(tr(isTh, "Email Address", "ที่อยู่อีเมล"), color = Color.LightGray) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -393,7 +430,7 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
 
             item {
                 Text(
-                    text = "Select Account Role",
+                    text = tr(isTh, "Select Account Role", "ระบุบทบาทผู้สมัคร"),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -407,6 +444,11 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
                     val roles = listOf("Elderly", "Family Member", "Caregiver")
                     roles.forEach { role ->
                         val isSelected = selectedRole == role
+                        val roleText = when (role) {
+                            "Elderly" -> tr(isTh, "Elderly", "ผู้สูงอายุ")
+                            "Family Member" -> tr(isTh, "Family Member", "คนในครอบครัว")
+                            else -> tr(isTh, "Caregiver", "ผู้ดูแลทั่วไป")
+                        }
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -417,7 +459,7 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
                                 .wrapContentSize(Alignment.Center)
                         ) {
                             Text(
-                                text = role,
+                                text = roleText,
                                 color = if (isSelected) Color.White else Color.LightGray,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
@@ -441,13 +483,13 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
                         .padding(top = 16.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Register & Next", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(tr(isTh, "Register & Next", "ลงทะเบียนและถัดไป"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
             item {
                 TextButton(onClick = { viewModel.navigateTo("Login") }) {
-                    Text("Already registered? Secure Log In", color = ContrastAmber, fontSize = 16.sp)
+                    Text(tr(isTh, "Already registered? Secure Log In", "ลงทะเบียนแล้ว? เข้าสู่ระบบอย่างปลอดภัย"), color = ContrastAmber, fontSize = 16.sp)
                 }
             }
         }
@@ -456,6 +498,7 @@ fun RegisterScreen(viewModel: FamilyCareViewModel) {
 
 @Composable
 fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     var groupCodeInput by remember { mutableStateOf("") }
     var groupNameInput by remember { mutableStateOf("") }
 
@@ -466,13 +509,26 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Floating Language Switcher
+        TextButton(
+            onClick = { viewModel.toggleLanguage() },
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp)
+        ) {
+            Text(
+                text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                color = ContrastAmber,
+                fontWeight = FontWeight.Black,
+                fontSize = 15.sp
+            )
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Family Group Connect",
+                text = tr(isTh, "Family Group Connect", "ตั้งกลุ่มเชื่อมต่อครอบครัว"),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -480,7 +536,10 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
             )
 
             Text(
-                text = "To sync emergency alerts, join an existing group with a code or create a new family network group.",
+                text = tr(isTh, 
+                    "To sync emergency alerts, join an existing group with a code or create a new family network group.",
+                    "เพื่อเชื่อมต่อระบบแจ้งเตือนฉุกเฉิน กรุณาเข้าร่วมกลุ่มเดิมผ่านรหัสเชิญ หรือสร้างกลุ่มครอบครัวชุดใหม่ขึ้นมา"
+                ),
                 color = Color.LightGray,
                 textAlign = TextAlign.Center,
                 fontSize = 15.sp,
@@ -494,11 +553,16 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Join Existing Group", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = tr(isTh, "Join Existing Group", "เข้าร่วมกลุ่มที่มีอยู่เดิม"),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                     OutlinedTextField(
                         value = groupCodeInput,
                         onValueChange = { groupCodeInput = it },
-                        placeholder = { Text("E.g. FAM-Care-419", color = Color.Gray) },
+                        placeholder = { Text(tr(isTh, "E.g. FAM-Care-419", "เช่น FAM-Care-419"), color = Color.Gray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
@@ -513,12 +577,12 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Verify & Connect", color = CozySlateBg, fontWeight = FontWeight.Bold)
+                        Text(tr(isTh, "Verify & Connect", "ตรวจสอบ & เชื่อมต่อกลุ่ม"), color = CozySlateBg, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            Text("— OR —", color = Color.Gray, fontSize = 14.sp)
+            Text(tr(isTh, "— OR —", "— หรือ —"), color = Color.Gray, fontSize = 14.sp)
 
             // OPTION 2: CREATE
             Card(
@@ -527,11 +591,16 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Create New Family Circle", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = tr(isTh, "Create New Family Circle", "จัดตั้งวงล้อมครอบครัวใหม่"),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                     OutlinedTextField(
                         value = groupNameInput,
                         onValueChange = { groupNameInput = it },
-                        placeholder = { Text("E.g. Sompong Home Care", color = Color.Gray) },
+                        placeholder = { Text(tr(isTh, "E.g. Sompong Home Care", "เช่น ส้มปอง โฮมแคร์"), color = Color.Gray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
@@ -550,7 +619,7 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Create & Launch Group", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(tr(isTh, "Create & Launch Group", "จัดตั้งกลุ่มครอบครัวและเปิดใช้งาน"), color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -561,6 +630,7 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val isRecordingVoice by viewModel.isRecordingVoice.collectAsState()
     val isFallCountingDown by viewModel.isFallCountingDown.collectAsState()
@@ -591,13 +661,13 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                         modifier = Modifier.size(72.dp).scale(1.2f)
                     )
                     Text(
-                        text = "FALL DETECTED!",
+                        text = tr(isTh, "FALL DETECTED!", "ตรวจพบการล้มกระแทก!"),
                         color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        text = "Sending SOS alert to all family members in:",
+                        text = tr(isTh, "Sending SOS alert to all family members in:", "กำลังแจ้งวิกฤตช่วยเหลือทุกคนในครอบครัวภายใน:"),
                         color = Color.White,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center
@@ -618,7 +688,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            "I AM OKAY (CANCEL)",
+                            tr(isTh, "I AM OKAY (CANCEL)", "ฉันปลอดภัยดี (ยกเลิกแก้อลาร์ม)"),
                             color = PrimaryAccent,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
@@ -634,13 +704,21 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
             TopAppBar(
                 title = {
                     Text(
-                        "Home Care Connect",
+                        tr(isTh, "Home Care Connect", "ศูนย์ดูแลครอบครัว"),
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 22.sp
                     )
                 },
                 actions = {
+                    TextButton(onClick = { viewModel.toggleLanguage() }) {
+                        Text(
+                            text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                            color = ContrastAmber,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp
+                        )
+                    }
                     IconButton(onClick = { viewModel.navigateTo("Settings") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
                     }
@@ -668,7 +746,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                 ) {
                     Column {
                         Text(
-                            text = "สวัสดี / Welcome,",
+                            text = tr(isTh, "Welcome,", "ขอต้อนรับยินดีต้อนรับ,"),
                             color = Color.LightGray,
                             fontSize = 16.sp
                         )
@@ -689,7 +767,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(Icons.Default.Check, contentDescription = "Mode", tint = Color(0xFF2EC4B6), modifier = Modifier.size(16.dp))
-                            Text("Elder Mode Screen", color = Color(0xFF2EC4B6), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(tr(isTh, "Elder Mode Screen", "โหมดผู้สูงอายุ"), color = Color(0xFF2EC4B6), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -698,7 +776,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
             // SECTION 1: GIANT RED SOS BUTTON (ELDERLY COMPACT)
             item {
                 Text(
-                    "ปุ่มช่วยเหลือฉุกเฉิน (กดค้างลุย)",
+                    tr(isTh, "SOS Emergency Assistance (Hold or Tap)", "ปุ่มช่วยเหลือฉุกเฉินวิกฤต (กดแช่/กดแตะ)"),
                     color = Color.LightGray,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
@@ -746,7 +824,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             fontWeight = FontWeight.Black
                         )
                         Text(
-                            text = "PRESS FOR HELP",
+                            text = tr(isTh, "PRESS FOR HELP", "กดเพื่อของความช่วยเหลือด่วน"),
                             color = Color.White.copy(alpha = 0.9f),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
@@ -769,7 +847,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "ส่งเสียงถึงครอบครัว / Push To Talk",
+                            text = tr(isTh, "Send Voice Note / Push To Talk", "ส่งวิทยุสาส์นเสียงหาครอบครัว (Push To Talk)"),
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
@@ -777,7 +855,8 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                         )
 
                         Text(
-                            text = if (isRecordingVoice) "🔊 กำลังบันทึกเสียง... ปล่อยเพื่อส่ง" else "แตะค้างปุ่มไมค์พูดส่งข้อความเสียง",
+                            text = if (isRecordingVoice) tr(isTh, "🔊 Recording voice... Release to send", "🔊 กำลังอัดเสียง... ปล่อยนิ้วเพื่อส่ง") 
+                                   else tr(isTh, "Hold microphone button to speak, release to transmit", "แตะไอคอนรูปไมโครโฟนค้างเพื่อพูดคุย"),
                             color = if (isRecordingVoice) PrimaryAccent else Color.LightGray,
                             fontSize = 14.sp,
                             modifier = Modifier.fillMaxWidth()
@@ -820,7 +899,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
             // SECTION 3: MEDICATION TODAY CHECKLIST (PRESETS REMINDERS)
             item {
                 Text(
-                    "รายการยารับประทานวันนี้ / Medications Today",
+                    tr(isTh, "Daily Medication Schedule", "ตารางยารับประทานประจำวันวันนี้"),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -831,7 +910,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
             if (medications.isEmpty()) {
                 item {
                     Text(
-                        "ยังไม่มีรายการตารางยาสำหรับวันนี้ / No Meds scheduled.",
+                        tr(isTh, "No medication reminders arranged today.", "ยังคงไม่มีตารางจัดยารับประทานสำหรับวันวันนี้"),
                         color = Color.LightGray,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -894,7 +973,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = if (alreadyTaken) "ทิานแล้ว / Taken" else "ทานยาเลย",
+                                text = if (alreadyTaken) tr(isTh, "Taken", "ทานแล้ว") else tr(isTh, "Take Now", "รับประทานยาเลย"),
                                 color = if (alreadyTaken) Color.LightGray else Color.White,
                                 fontWeight = FontWeight.Bold
                             )
@@ -913,6 +992,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val activeSOSLogs by viewModel.activeSOSLogs.collectAsState()
     val allSOSLogs by viewModel.allSOSLogs.collectAsState()
@@ -941,7 +1021,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Add Elder Medication",
+                        tr(isTh, "Add Elder Medication", "เพิ่มกำหนดการยาทานผู้สูงอายุ"),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
@@ -950,18 +1030,19 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     OutlinedTextField(
                         value = newMedName,
                         onValueChange = { newMedName = it },
-                        label = { Text("Medicine Name", color = Color.LightGray) },
+                        label = { Text(tr(isTh, "Medicine Name", "ชื่อยารับประทาน"), color = Color.LightGray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
+                        placeholder = { Text(tr(isTh, "E.g. Paracetamol", "เช่น พาราเซตามอล"), color = Color.Gray) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = newMedDosage,
                         onValueChange = { newMedDosage = it },
-                        label = { Text("Dosage / Quantity (e.g. 1 Pill)", color = Color.LightGray) },
+                        label = { Text(tr(isTh, "Dosage / Quantity (e.g. 1 Pill)", "ขนาดยาที่ทาน (เช่น 1 เม็ด)"), color = Color.LightGray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
@@ -972,7 +1053,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     OutlinedTextField(
                         value = newMedTime,
                         onValueChange = { newMedTime = it },
-                        label = { Text("Intake TimeOfDay (e.g. 08:30 AM)", color = Color.LightGray) },
+                        label = { Text(tr(isTh, "Intake TimeOfDay (e.g. 08:30 AM)", "ช่วงเวลาที่รับประทาน (เช่น 08:30 น.)"), color = Color.LightGray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
@@ -983,7 +1064,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     OutlinedTextField(
                         value = newMedDesc,
                         onValueChange = { newMedDesc = it },
-                        label = { Text("Guidelines / Remarks", color = Color.LightGray) },
+                        label = { Text(tr(isTh, "Guidelines / Remarks", "คำแนะนำในการทานยา / หมายเหตุ"), color = Color.LightGray) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
@@ -1001,7 +1082,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Dismiss", color = Color.White)
+                            Text(tr(isTh, "Dismiss", "ปิดหน้าต่าง"), color = Color.White)
                         }
 
                         Button(
@@ -1018,7 +1099,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Save Plan", color = Color.White)
+                            Text(tr(isTh, "Save Plan", "บันทึกจัดยา"), color = Color.White)
                         }
                     }
                 }
@@ -1031,13 +1112,21 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
             TopAppBar(
                 title = {
                     Text(
-                        "Caregiver Security Board",
+                        tr(isTh, "Caregiver Security Board", "กระดานติดตามครอบครัว"),
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
                         fontSize = 20.sp
                     )
                 },
                 actions = {
+                    TextButton(onClick = { viewModel.toggleLanguage() }) {
+                        Text(
+                            text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                            color = ContrastAmber,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp
+                        )
+                    }
                     IconButton(onClick = { viewModel.navigateTo("Settings") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
                     }
@@ -1062,7 +1151,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Active Panic Alerts (${activeSOSLogs.size})",
+                        text = tr(isTh, "Active Panic Alerts (${activeSOSLogs.size})", "สายด่วนแจ้งเหตุฉุกเฉินขณะนี้ (${activeSOSLogs.size})"),
                         color = if (activeSOSLogs.isNotEmpty()) PrimaryAccent else Color.White,
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp
@@ -1070,7 +1159,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
 
                     if (allSOSLogs.isNotEmpty()) {
                         Text(
-                            text = "Clear Alarm logs",
+                            text = tr(isTh, "Clear Alarm logs", "ล้างบันทึกสัญญาณเตือน"),
                             color = Color.LightGray,
                             fontSize = 13.sp,
                             modifier = Modifier
@@ -1096,8 +1185,8 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                         ) {
                             Icon(Icons.Default.Check, contentDescription = "Status safe", tint = SaniGreen, modifier = Modifier.size(28.dp))
                             Column {
-                                Text("ALL SYSTEM STATUS SECURE", color = Color.White, fontWeight = FontWeight.Bold)
-                                Text("No unresolved Elder alerts triggered right now.", color = Color.LightGray, fontSize = 13.sp)
+                                Text(tr(isTh, "ALL SYSTEM STATUS SECURE", "สถานะครอบครัวคุณปกติและปลอดภัย"), color = Color.White, fontWeight = FontWeight.Bold)
+                                Text(tr(isTh, "No unresolved Elder alerts triggered right now.", "ไม่มีสัญญาณแจ้งเตือนตกค้างจากผู้สูงอายุในขณะนี้"), color = Color.LightGray, fontSize = 13.sp)
                             }
                         }
                     }
@@ -1119,13 +1208,13 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "🔴 SOS: ${log.elderName}",
+                                    text = tr(isTh, "🔴 SOS: ${log.elderName}", "🔴 ด่วน SOS: ${log.elderName}"),
                                     color = Color.White,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 18.sp
                                 )
                                 Text(
-                                    text = "LIVE PIN",
+                                    text = tr(isTh, "LIVE PIN", "แสดงพิกัดนำทาง"),
                                     color = ContrastAmber,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
@@ -1136,7 +1225,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                             }
 
                             Text(
-                                text = "Incident: ${log.alertMessage}",
+                                text = tr(isTh, "Incident: ${log.alertMessage}", "สาเหตุเหตุการณ์: ${log.alertMessage}"),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -1148,7 +1237,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                             ) {
                                 Icon(Icons.Default.Place, contentDescription = "Coords", tint = Color.White, modifier = Modifier.size(16.dp))
                                 Text(
-                                    text = "Lattitude: ${log.latitude} • Longitude: ${log.longitude}",
+                                    text = tr(isTh, "Latitude: ${log.latitude} • Longitude: ${log.longitude}", "ละติจูด: ${log.latitude} • ลองจิจูด: ${log.longitude}"),
                                     color = Color.White.copy(alpha = 0.9f),
                                     fontSize = 12.sp
                                 )
@@ -1173,7 +1262,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Icon(Icons.Default.Place, contentDescription = "gmaps", tint = PrimaryAccent, modifier = Modifier.size(16.dp))
-                                        Text("Google Maps", color = PrimaryAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text(tr(isTh, "Google Maps", "นำทางแผนที่"), color = PrimaryAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
                                 }
 
@@ -1182,7 +1271,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                     colors = ButtonDefaults.buttonColors(containerColor = CozySlateBg),
                                     modifier = Modifier.weight(1f).height(40.dp)
                                 ) {
-                                    Text("Mark Resolved", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(tr(isTh, "Mark Resolved", "ช่วยเหลือเสร็จสิ้น"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -1193,7 +1282,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
             // SECTION: ACTIVE INCOMING VOICES MESSAGES (EXCELLENT STREAMING SIMULATION)
             item {
                 Text(
-                    text = "Elder Voice Recordings (${voiceMessages.size})",
+                    text = tr(isTh, "Elder Voice Recordings (${voiceMessages.size})", "บันทึกข้อความเสียงผู้สูงอายุและประเมินสุขภาพ (${voiceMessages.size})"),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
@@ -1202,7 +1291,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
 
             if (voiceMessages.isEmpty()) {
                 item {
-                    Text("No voice feeds recorded yet.", color = Color.LightGray, modifier = Modifier.padding(8.dp))
+                    Text(tr(isTh, "No voice feeds recorded yet.", "ยังไม่ได้รับข้อความเสียงบันทึกเข้ามา"), color = Color.LightGray, modifier = Modifier.padding(8.dp))
                 }
             } else {
                 items(voiceMessages) { msg ->
@@ -1231,13 +1320,18 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                         "Slight distress" -> Color(0xFFFFA502)
                                         else -> SaniGreen
                                     }
+                                    val localDistressLevel = when (msg.distressLevel) {
+                                        "Severe distress" -> tr(isTh, "Severe distress", "วิกฤตรุนแรง")
+                                        "Slight distress" -> tr(isTh, "Slight distress", "กังวลเล็กน้อย")
+                                        else -> tr(isTh, msg.distressLevel, "เป็นปกติ")
+                                    }
                                     Box(
                                         modifier = Modifier
                                             .background(tagColor.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
                                             .border(1.dp, tagColor, RoundedCornerShape(4.dp))
                                             .padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text(msg.distressLevel.uppercase(), color = tagColor, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                                        Text(localDistressLevel.uppercase(), color = tagColor, fontSize = 10.sp, fontWeight = FontWeight.Black)
                                     }
 
                                     Button(
@@ -1263,7 +1357,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                                 tint = Color.White,
                                                 modifier = Modifier.size(16.dp)
                                             )
-                                            Text(if (isPlaying) "Playing" else "Listen", color = Color.White, fontSize = 12.sp)
+                                            Text(if (isPlaying) tr(isTh, "Playing", "กำลังฟัง") else tr(isTh, "Listen", "คลิกเพื่อฟัง"), color = Color.White, fontSize = 12.sp)
                                         }
                                     }
                                 }
@@ -1282,8 +1376,8 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("🤖 Core AI Speech Analysis", color = ContrastAmber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text("Pulse Check: ${if (msg.detectedPulseBpm > 0) "${msg.detectedPulseBpm} BPM" else "Calculating"}", color = Color.LightGray, fontSize = 10.sp)
+                                    Text(tr(isTh, "🤖 Core AI Speech Analysis", "🤖 ระบบวิเคราะห์ระดับสุขภาพทางเสียงด้วย AI"), color = ContrastAmber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(tr(isTh, "Pulse Check: ${if (msg.detectedPulseBpm > 0) "${msg.detectedPulseBpm} BPM" else "Calculating"}", "ตรวจสัญญาณชีพจรสะท้อน: ${if (msg.detectedPulseBpm > 0) "${msg.detectedPulseBpm} ครั้ง/นาที" else "กำลังคาดคะเน"}"), color = Color.LightGray, fontSize = 10.sp)
                                 }
                                 Text(
                                     text = msg.comments,
@@ -1305,21 +1399,21 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Medication Reminders Status", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(tr(isTh, "Medication Reminders Status", "สถานะความคืบหน้าการรับประทานยา"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Button(
                         onClick = { showMedScheduleDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.height(36.dp)
                     ) {
-                        Text("+ Add Schedule", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(tr(isTh, "+ Add Schedule", "+ เพิ่มจัดตารางยา"), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
             if (medLogsToday.isEmpty()) {
                 item {
-                    Text("No medicines marked as taken today yet.", color = Color.LightGray)
+                    Text(tr(isTh, "No medicines marked as taken today yet.", "ผู้สูงอายุยังไม่มีประทานทานยาวันนี้"), color = Color.LightGray)
                 }
             } else {
                 items(medLogsToday) { log ->
@@ -1338,10 +1432,10 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
                                 Column {
                                     Text(log.medName, color = Color.White, fontWeight = FontWeight.Bold)
                                     val checkTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(log.intakeTimestamp))
-                                    Text("Taken at $checkTime", color = Color.LightGray, fontSize = 12.sp)
+                                    Text(tr(isTh, "Taken at $checkTime", "รับประทานยาแล้วเสร็จเมื่อเวลา $checkTime"), color = Color.LightGray, fontSize = 12.sp)
                                 }
                             }
-                            Text("CONFIRMED", color = SaniGreen, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                            Text(tr(isTh, "CONFIRMED", "ยืนยันแล้ว"), color = SaniGreen, fontWeight = FontWeight.Black, fontSize = 11.sp)
                         }
                     }
                 }
@@ -1357,6 +1451,7 @@ fun FamilyDashboardScreen(viewModel: FamilyCareViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: FamilyCareViewModel) {
+    val isTh by viewModel.isThaiLanguage.collectAsState()
     val fallEnabled by viewModel.fallDetectionEnabled.collectAsState()
     val sensorX by viewModel.sensorX.collectAsState()
     val sensorY by viewModel.sensorY.collectAsState()
@@ -1366,10 +1461,20 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings & Sensor Portal", color = Color.White, fontWeight = FontWeight.Bold) },
+                title = { Text(tr(isTh, "Settings & Sensor Portal", "ตั้งค่าระบบ & มอนิเตอร์เซนเซอร์"), color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { viewModel.navigateBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { viewModel.toggleLanguage() }) {
+                        Text(
+                            text = if (isTh) "ENGLISH" else "ภาษาไทย",
+                            color = ContrastAmber,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 15.sp
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CozySlateBg)
@@ -1392,10 +1497,10 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Session & Role Alignment", color = ContrastAmber, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    Text("User: ${currentUserState?.name ?: "Unknown"}", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text("Email: ${currentUserState?.email ?: "Unknown"}", color = Color.LightGray, fontSize = 14.sp)
-                    Text("Linked Group Code: ${currentUserState?.groupCode ?: "No code joined"}", color = Color.LightGray, fontSize = 14.sp)
+                    Text(tr(isTh, "Session & Role Alignment", "จำลองเปลี่ยนเข้าสู่โหมดประเมินสถานภาพ"), color = ContrastAmber, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(tr(isTh, "User: ${currentUserState?.name ?: "Unknown"}", "บัญชีผู้ใช้: ${currentUserState?.name ?: "ไม่ระบุชื่อ"}"), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(isTh, "Email: ${currentUserState?.email ?: "Unknown"}", "อีเมล: ${currentUserState?.email ?: "ไม่ระบุอีเมล์"}"), color = Color.LightGray, fontSize = 14.sp)
+                    Text(tr(isTh, "Linked Group Code: ${currentUserState?.groupCode ?: "No code joined"}", "รหัสเข้าร่วมกลุ่มบ้าน: ${currentUserState?.groupCode ?: "ไม่มีรหัสกลุ่มเชื่อมโยง"}"), color = Color.LightGray, fontSize = 14.sp)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -1408,7 +1513,7 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Elder Mode", fontSize = 12.sp, color = Color.White)
+                            Text(tr(isTh, "Elder Mode", "โหมดผู้สูงอายุ"), fontSize = 12.sp, color = Color.White)
                         }
 
                         Button(
@@ -1416,7 +1521,7 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                             colors = ButtonDefaults.buttonColors(containerColor = SaniGreen),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Family Mode", fontSize = 12.sp, color = Color.White)
+                            Text(tr(isTh, "Family Mode", "โหมดครอบครัว"), fontSize = 12.sp, color = Color.White)
                         }
                     }
                 }
@@ -1435,8 +1540,8 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Fall Detection Standard", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("Uses Accelerometer G force parameters", color = Color.LightGray, fontSize = 12.sp)
+                            Text(tr(isTh, "Fall Detection Standard", "เปิดโหมดเซนเซอร์ล้มฉุกเฉิน"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(tr(isTh, "Uses Accelerometer G force parameters", "ใช้โมดูลวัดผลแรงโน้มถ่วงเรียลไทม์เพื่อกันความเสี่ยง"), color = Color.LightGray, fontSize = 12.sp)
                         }
                         Switch(
                             checked = fallEnabled,
@@ -1451,22 +1556,22 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                     // LIVE SENSOR METRICS FOR PREMIUM SHOWCASE
                     if (fallEnabled) {
                         Divider(color = Color.Gray.copy(alpha = 0.2f))
-                        Text("Live G-Sensor Telemetry Vectors", color = ContrastAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(tr(isTh, "Live G-Sensor Telemetry Vectors", "ข้อมูลผลลัพธ์พิกัดเซนเซอร์แรงโน้มถ่วงตัวรับผล"), color = ContrastAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("X-axis (Lateral)", color = Color.LightGray, fontSize = 11.sp)
+                                Text(tr(isTh, "X-axis (Lateral)", "แกนหนีศูนย์แนวขวาง X"), color = Color.LightGray, fontSize = 11.sp)
                                 Text(String.format(Locale.getDefault(), "%.2f m/s²", sensorX), color = Color.White, fontSize = 14.sp)
                             }
                             Column {
-                                Text("Y-axis (Vertical)", color = Color.LightGray, fontSize = 11.sp)
+                                Text(tr(isTh, "Y-axis (Vertical)", "แกนหนีศูนย์แนวติ่งตั้ง Y"), color = Color.LightGray, fontSize = 11.sp)
                                 Text(String.format(Locale.getDefault(), "%.2f m/s²", sensorY), color = Color.White, fontSize = 14.sp)
                             }
                             Column {
-                                Text("Z-axis (Depth)", color = Color.LightGray, fontSize = 11.sp)
+                                Text(tr(isTh, "Z-axis (Depth)", "แกนหนีศูนย์แนวดิ่งลึก Z"), color = Color.LightGray, fontSize = 11.sp)
                                 Text(String.format(Locale.getDefault(), "%.2f m/s²", sensorZ), color = Color.White, fontSize = 14.sp)
                             }
                         }
@@ -1479,7 +1584,10 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
                                 .padding(10.dp)
                         ) {
                             Text(
-                                "Simulation Tip: Shake coordinates rapidly in the emulator, or trigger crash force velocity simulation from gravity drops to trigger the 30-Seconds Countdown automatically.",
+                                tr(isTh, 
+                                    "Simulation Tip: Shake coordinates rapidly in the emulator, or trigger crash force velocity simulation from gravity drops to trigger the 30-Seconds Countdown automatically.",
+                                    "คำแนะนำกระตุ้นแบบจำลอง: ทำการเหวี่ยงเคลื่อนแรงสั่นไหวในเซนเซอร์อย่างรวดเร็ว เพื่อตรวจจับแรงกระแทกดิ่ง ต้านภัยเพื่อให้นาฬิกานับถอยหลัง 30 วินาทีทำงานจำลองเพื่อทดสอบกลุ่มทันที"
+                                ),
                                 color = Color.LightGray,
                                 fontSize = 12.sp
                             )
@@ -1501,7 +1609,7 @@ fun SettingsScreen(viewModel: FamilyCareViewModel) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.PowerSettingsNew, contentDescription = "logout", tint = Color.White)
-                    Text("Log Out Safe Session", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(isTh, "Log Out Safe Session", "ออกจากระบบควบคุมอย่างปลอดภัย"), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
