@@ -154,6 +154,13 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
     val lastWatchSyncTime: StateFlow<Long> = _lastWatchSyncTime.asStateFlow()
 
     init {
+        // Collect battery state to adjust polling rate
+        viewModelScope.launch {
+            com.example.util.BatteryState.isPowerSaveMode.collect { isPowerSave ->
+                // This will be used to adjust delay
+            }
+        }
+        
         // Start real-time watch health physiological metrics simulation stream
         viewModelScope.launch {
             while (true) {
@@ -205,7 +212,7 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
                         Log.e("WatchSimulation", "Failed to stream watch metric: ${e.message}")
                     }
                 }
-                kotlinx.coroutines.delay(4000) // update every 4 seconds for a active lively appearance
+                kotlinx.coroutines.delay(if (com.example.util.BatteryState.isPowerSaveMode.value) 12000L else 4000L) // update every 4-12 seconds for active lively appearance
             }
         }
         // Initialize preset default logs and mock groups for best showcase experience
