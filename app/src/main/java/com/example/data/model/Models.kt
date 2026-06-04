@@ -97,6 +97,22 @@ data class TrustedDevice(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "user_status")
+data class UserStatus(
+    @PrimaryKey val userId: String,
+    val status: String, // "Safe", "At-Home", "Away"
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "user_activity")
+data class UserActivity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val userId: String,
+    val activityName: String, // e.g., "Take Medication"
+    val isCompleted: Boolean,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 @Entity(tableName = "watch_health_data")
 data class WatchHealthData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

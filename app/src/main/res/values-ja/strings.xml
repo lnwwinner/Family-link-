@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">ファミリーケアリンク</string>
+    <string name="accessibility_service_desc">SOS緊急信号を検出するために外部ハードウェアボタンと音量キーの監視を有効にします。</string>
+    <string name="current_status">現在のステータス:</string>
+    <string name="not_set">未設定</string>
+    <string name="safe">安全</string>
+    <string name="at_home">在宅</string>
+    <string name="away">外出中</string>
+    <string name="daily_medication_schedule">毎日の服薬スケジュール</string>
+    <string name="take_medication">薬を飲む</string>
+    <string name="add_elder_medication">高齢者の服薬リマインダーを追加</string>
+    <string name="medication_reminders_status">服薬リマインダーの進行状況</string>
+    <string name="language_settings">言語設定</string>
+    <string name="emergency_sos">緊急 SOS</string>
+</resources>

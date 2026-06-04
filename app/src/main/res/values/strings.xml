@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">Family Care Link</string>
-    <string name="accessibility_service_desc">Enables hardware hotkeys monitoring for family safety and custom volume controls for trigger-alert SOS operations.</string>
+    <string name="accessibility_service_desc">เปิดการจับการกดปุ่มทางกายภาพภายนอก/และปุ่มระดับเสียงเพื่อวิเคราะห์สัญญาณฉุกเฉินช่วยชีวิต SOS</string>
+    <string name="current_status">สถานะปัจจุบัน:</string>
+    <string name="not_set">ยังไม่ได้ตั้งค่า</string>
+    <string name="safe">ปลอดภัย</string>
+    <string name="at_home">อยู่ที่บ้าน</string>
+    <string name="away">ข้างนอก</string>
+    <string name="daily_medication_schedule">ตารางยารับประทานประจำวัน</string>
+    <string name="take_medication">ทานยา</string>
+    <string name="add_elder_medication">เพิ่มกำหนดการยาทานผู้สูงอายุ</string>
+    <string name="medication_reminders_status">สถานะความคืบหน้าการรับประทานยา</string>
+    <string name="language_settings">ตั้งค่าภาษา</string>
+    <string name="emergency_sos">แจ้งเตือนฉุกเฉิน SOS</string>
 </resources>

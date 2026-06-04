@@ -98,6 +98,20 @@ interface FamilyCareDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrustedDevice(device: TrustedDevice)
 
+    // User Status
+    @Query("SELECT * FROM user_status WHERE userId = :userId LIMIT 1")
+    fun getUserStatus(userId: String): Flow<UserStatus?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserStatus(status: UserStatus)
+
+    // User Activity
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserActivity(activity: UserActivity)
+
+    @Query("SELECT * FROM user_activity WHERE userId = :userId ORDER BY timestamp DESC")
+    fun getUserActivities(userId: String): Flow<List<UserActivity>>
+
     // Watch Health Data
     @Query("SELECT * FROM watch_health_data ORDER BY timestamp DESC")
     fun getAllWatchHealthData(): Flow<List<WatchHealthData>>

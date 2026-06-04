@@ -19,13 +19,15 @@ import com.example.data.model.*
         FamilyMember::class,
         JoinRequest::class,
         TrustedDevice::class,
+        UserStatus::class,
+        UserActivity::class,
         WatchHealthData::class,
         HospitalAppointment::class,
         MedicalDocument::class,
         EmergencyProfile::class,
         MedicalFacilityEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

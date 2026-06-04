@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">家庭护理链接</string>
+    <string name="accessibility_service_desc">启用外部硬件按钮和音量键监控，以分析 SOS 求救信号。</string>
+    <string name="current_status">当前状态：</string>
+    <string name="not_set">未设置</string>
+    <string name="safe">安全</string>
+    <string name="at_home">在家</string>
+    <string name="away">外出</string>
+    <string name="daily_medication_schedule">每日服药时间表</string>
+    <string name="take_medication">服药</string>
+    <string name="add_elder_medication">添加老人服药提醒</string>
+    <string name="medication_reminders_status">服药提醒进度</string>
+    <string name="language_settings">语言设置</string>
+    <string name="emergency_sos">紧急 SOS 求救</string>
+</resources>

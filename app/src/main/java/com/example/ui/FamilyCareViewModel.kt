@@ -359,6 +359,24 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun updateUserStatus(userId: String, status: String) {
+        viewModelScope.launch {
+            repository.setUserStatus(userId, status)
+        }
+    }
+
+    fun getUserStatus(userId: String): Flow<UserStatus?> {
+        return repository.getUserStatusFlow(userId)
+    }
+
+    fun markMedicationTaken(userId: String) {
+        viewModelScope.launch {
+            repository.logUserActivity(userId, "Take Medication", true)
+            // Optionally update the main status dashboard
+            repository.setUserStatus(userId, "Safe")
+        }
+    }
+
     fun handleRegister(name: String, email: String, role: String) {
         viewModelScope.launch {
             val user = User(
@@ -566,6 +584,11 @@ class FamilyCareViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             repository.logMedicationIntake(medId, medName, isTaken = true)
             _activeNotification.value = "Marked '$medName' as TAKEN successfully."
+            
+            _currentUser.value?.id?.let { userId ->
+                repository.setUserStatus(userId, "Safe")
+                repository.logUserActivity(userId, "Take Medication: $medName", true)
+            }
         }
     }
 

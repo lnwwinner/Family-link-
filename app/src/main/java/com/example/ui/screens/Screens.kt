@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.font.FontFamily
@@ -634,6 +636,50 @@ fun GroupSetupScreen(viewModel: FamilyCareViewModel) {
     }
 }
 
+@Composable
+fun StatusDashboard(viewModel: FamilyCareViewModel, userId: String) {
+    val status by viewModel.getUserStatus(userId).collectAsState(initial = null)
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                stringResource(id = R.string.current_status),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = when(status?.status) {
+                    "Safe" -> stringResource(id = R.string.safe)
+                    "At-Home" -> stringResource(id = R.string.at_home)
+                    "Away" -> stringResource(id = R.string.away)
+                    else -> stringResource(id = R.string.not_set)
+                },
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Row(modifier = Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Safe", "At-Home", "Away").forEach { s ->
+                    Button(
+                        onClick = { viewModel.updateUserStatus(userId, s) },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (status?.status == s) MaterialTheme.colorScheme.primary else Color.Gray)
+                    ) {
+                        Text(
+                            text = when(s) {
+                                "Safe" -> stringResource(id = R.string.safe)
+                                "At-Home" -> stringResource(id = R.string.at_home)
+                                else -> stringResource(id = R.string.away)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
@@ -651,6 +697,7 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
     val watchBattery by viewModel.watchBatteryLevel.collectAsState()
     val isSyncingData by viewModel.isSyncingWatchData.collectAsState()
     val lastSyncTime by viewModel.lastWatchSyncTime.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
 
     // Fall Detection Modal
     if (isFallCountingDown) {
@@ -786,6 +833,12 @@ fun ElderDashboardScreen(viewModel: FamilyCareViewModel) {
                             Text(tr(isTh, "Elder Mode Screen", "โหมดผู้สูงอายุ"), color = Color(0xFF2EC4B6), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
+                }
+            }
+
+            item {
+                currentUser?.let { user ->
+                    StatusDashboard(viewModel, user.id)
                 }
             }
 

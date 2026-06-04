@@ -275,6 +275,22 @@ class FamilyCareRepository(
         return group
     }
 
+    suspend fun setUserStatus(userId: String, status: String) = withContext(Dispatchers.IO) {
+        dao.insertUserStatus(UserStatus(userId, status))
+    }
+
+    fun getUserStatusFlow(userId: String): Flow<UserStatus?> {
+        return dao.getUserStatus(userId)
+    }
+
+    suspend fun logUserActivity(userId: String, activityName: String, isCompleted: Boolean) = withContext(Dispatchers.IO) {
+        dao.insertUserActivity(UserActivity(userId = userId, activityName = activityName, isCompleted = isCompleted))
+    }
+
+    fun getUserActivitiesFlow(userId: String): Flow<List<UserActivity>> {
+        return dao.getUserActivities(userId)
+    }
+
     // Family Management
     suspend fun createFamilyGroup(groupId: String, groupName: String, groupCode: String, ownerId: String): FamilyGroup {
         val group = FamilyGroup(groupId, groupName, groupCode, ownerId)

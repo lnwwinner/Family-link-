@@ -73,6 +73,12 @@
             android:turnScreenOn="true"
             android:theme="@style/Theme.MyApplication" />
 
+        <!-- Floating SOS Overlay Service -->
+        <service 
+            android:name=".service.FloatingSOSService"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
 </manifest>
